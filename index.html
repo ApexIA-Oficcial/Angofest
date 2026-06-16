@@ -457,6 +457,7 @@
       users: JSON.parse(localStorage.getItem("af_users_v2")) || MOCK_USERS_BASE,
       events: JSON.parse(localStorage.getItem("af_events_v2")) || MOCK_EVENTS_BASE,
       chats: JSON.parse(localStorage.getItem("af_chats_v2")) || MOCK_CHAT_BASE,
+      sales: JSON.parse(localStorage.getItem("af_sales")) || [],
       currentUser: JSON.parse(localStorage.getItem("af_current_user_v2")) || null,
       currentView: 'home', // home, promoter-dashboard, admin-dashboard, user-account
       searchQuery: '',
@@ -475,6 +476,7 @@
       localStorage.setItem("af_users_v2", JSON.stringify(state.users));
       localStorage.setItem("af_events_v2", JSON.stringify(state.events));
       localStorage.setItem("af_chats_v2", JSON.stringify(state.chats));
+      localStorage.setItem("af_sales", JSON.stringify(state.sales));
       localStorage.setItem("af_current_user_v2", JSON.stringify(state.currentUser));
     }
 
@@ -1724,56 +1726,72 @@
         }, 300);
       }
 
-      // Update Auth Widget Header
-      const headerAuth = document.getElementById("header-auth-section");
-      if(headerAuth) {
-        if(state.currentUser) {
-          const user = state.currentUser;
-          let viewRouteBtn = "";
-          if(user.role === 'admin') {
-            viewRouteBtn = `<button onclick="navigateTo('admin-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-orange-500/10 text-brand-orange hover:bg-orange-500/20 transition flex items-center gap-1"><i data-lucide="sliders" class="w-3.5 h-3.5"></i> Painel Admin</button>`;
-          } else if(user.role === 'promoter') {
-            viewRouteBtn = `<button onclick="navigateTo('promoter-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-purple-500/10 text-brand-violet hover:bg-purple-500/20 transition flex items-center gap-1"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Área Promotor</button>`;
-          } else if(user.role === 'user') {
-            viewRouteBtn = `<button onclick="navigateTo('member-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-violet-500/10 text-brand-violet hover:bg-violet-500/20 transition flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i> Comunidade</button>`;
-          }
+      try {
+        // Update Auth Widget Header
+        const headerAuth = document.getElementById("header-auth-section");
+        if(headerAuth) {
+          if(state.currentUser) {
+            const user = state.currentUser;
+            let viewRouteBtn = "";
+            if(user.role === 'admin') {
+              viewRouteBtn = `<button onclick="navigateTo('admin-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-orange-500/10 text-brand-orange hover:bg-orange-500/20 transition flex items-center gap-1"><i data-lucide="sliders" class="w-3.5 h-3.5"></i> Painel Admin</button>`;
+            } else if(user.role === 'promoter') {
+              viewRouteBtn = `<button onclick="navigateTo('promoter-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-purple-500/10 text-brand-violet hover:bg-purple-500/20 transition flex items-center gap-1"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Área Promotor</button>`;
+            } else if(user.role === 'user') {
+              viewRouteBtn = `<button onclick="navigateTo('member-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-violet-500/10 text-brand-violet hover:bg-violet-500/20 transition flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i> Comunidade</button>`;
+            }
 
-          headerAuth.innerHTML = `
-            <div class="flex items-center gap-2">
-              <div class="hidden sm:flex flex-col text-right">
-                <span class="text-xs font-bold font-display truncate max-w-[120px] mb-0.5">${user.nome}</span>
-                <span class="text-[9px] text-slate-400 leading-none capitalize">${user.role === 'user' ? 'Membro' : user.role}</span>
+            headerAuth.innerHTML = `
+              <div class="flex items-center gap-2">
+                <div class="hidden sm:flex flex-col text-right">
+                  <span class="text-xs font-bold font-display truncate max-w-[120px] mb-0.5">${user.nome}</span>
+                  <span class="text-[9px] text-slate-400 leading-none capitalize">${user.role === 'user' ? 'Membro' : user.role}</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center font-display font-bold text-xs uppercase" title="${user.nome}">
+                  ${user.nome.substring(0, 1)}
+                </div>
+                ${viewRouteBtn}
+                <button onclick="handleLogoutSession()" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition" title="Logout"><i data-lucide="log-out" class="w-4 h-4"></i></button>
               </div>
-              <div class="w-8 h-8 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center font-display font-bold text-xs uppercase" title="${user.nome}">
-                ${user.nome.substring(0, 1)}
-              </div>
-              ${viewRouteBtn}
-              <button onclick="handleLogoutSession()" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition" title="Logout"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+            `;
+          } else {
+            headerAuth.innerHTML = `
+              <button onclick="openAuthDialog('login')" class="text-xs font-semibold px-4 h-10 rounded-full border border-slate-300 dark:border-brand-carddark/60 hover:text-brand-orange transition flex items-center gap-1.5"><i data-lucide="unlock" class="w-3.5 h-3.5"></i> Acesso</button>
+              <button onclick="openAuthDialog('register')" class="text-xs font-bold px-4 h-10 rounded-full bg-gradient-to-r from-brand-violet to-brand-orange text-white hover:opacity-90 transition inline-block">Registo</button>
+            `;
+          }
+        }
+
+        // Main Routing
+        const workspace = document.getElementById("app-workspace");
+        if(!workspace) return;
+
+        if(state.currentView === 'home') {
+          renderHome(workspace);
+        } else if (state.currentView === 'promoter-dashboard') {
+          renderPromoterDashboard(workspace);
+        } else if (state.currentView === 'admin-dashboard') {
+          renderAdminDashboard(workspace);
+        } else if (state.currentView === 'member-dashboard') {
+          renderMemberDashboard(workspace);
+        }
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error("ERRO CRÍTICO NA RENDERIZAÇÃO DA PÁGINA (ANGOFEST):", err);
+        const workspace = document.getElementById("app-workspace");
+        if (workspace) {
+          workspace.innerHTML = `
+            <div class="p-8 text-center bg-red-500/10 border border-red-500/30 text-red-200 rounded-3xl max-w-lg mx-auto my-8">
+              <i data-lucide="alert-triangle" class="w-8 h-8 text-brand-orange mx-auto mb-3"></i>
+              <h3 class="text-base font-bold font-display uppercase tracking-wide">Erro de Carregamento</h3>
+              <p class="text-xs text-slate-300 mt-2">Ocorreu um erro ao carregar esta secção do AngoFest. No entanto, o portal continua operacional!</p>
+              <button onclick="state.currentView='home'; renderApp();" class="mt-4 px-4 py-2 bg-brand-violet font-bold text-xs uppercase rounded-xl text-white hover:opacity-90 transition">Voltar ao Início</button>
             </div>
           `;
-        } else {
-          headerAuth.innerHTML = `
-            <button onclick="openAuthDialog('login')" class="text-xs font-semibold px-4 h-10 rounded-full border border-slate-300 dark:border-brand-carddark/60 hover:text-brand-orange transition flex items-center gap-1.5"><i data-lucide="unlock" class="w-3.5 h-3.5"></i> Acesso</button>
-            <button onclick="openAuthDialog('register')" class="text-xs font-bold px-4 h-10 rounded-full bg-gradient-to-r from-brand-violet to-brand-orange text-white hover:opacity-90 transition inline-block">Registo</button>
-          `;
+          lucide.createIcons();
         }
       }
-
-      // Main Routing
-      const workspace = document.getElementById("app-workspace");
-      if(!workspace) return;
-
-      if(state.currentView === 'home') {
-        renderHome(workspace);
-      } else if (state.currentView === 'promoter-dashboard') {
-        renderPromoterDashboard(workspace);
-      } else if (state.currentView === 'admin-dashboard') {
-        renderAdminDashboard(workspace);
-      } else if (state.currentView === 'member-dashboard') {
-        renderMemberDashboard(workspace);
-      }
-
-      lucide.createIcons();
     };
 
     // 1. HOME SCREEN
