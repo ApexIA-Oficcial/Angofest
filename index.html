@@ -1,3 +1,4 @@
+``html
 <!DOCTYPE html>
 <html lang="pt-AO" class="scroll-smooth">
 <head>
@@ -6,7 +7,7 @@
   <title>AngoFest | O Epicentro de Eventos e Festivais em Angola</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="AngoFest - O maior portal de eventos de Angola. Encontre shows, festivais, festas, conferências e feiras em todas as províncias. Crie e promova o seu evento!">
+  <meta name="description" content="AngoFest - O maior portal de eventos de Angola. Encontre shows, festivals, festas, conferências e feiras em todas as províncias. Crie e promova o seu evento!">
   <meta name="keywords" content="AngoFest, Eventos Angola, Festas Luanda, Shows Angola, Festivais Angola, Promotores Angola, Cartaz Angola, Cultura Angola">
   <meta name="author" content="AngoFest Limitada">
   <meta property="og:title" content="AngoFest | Portal de Eventos de Angola">
@@ -265,18 +266,16 @@
   <!-- Real-Time Application JavaScript Context Modules -->
   <script type="module">
     // =========================================================================
-    // // CONFIGURAÇÃO FIREBASE
+    // CONFIGURAÇÃO FIREBASE (Tratamento seguro para evitar crash por import.meta.env)
     // =========================================================================
-    // Pode introduzir aqui as credenciais do seu projeto Firebase diretamente.
-    // O portal ativa automaticamente canais e persistência Firebase se detetar configs.
     const firebaseConfig = {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-      appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+      apiKey: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_API_KEY) || "",
+      authDomain: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN) || "",
+      projectId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_PROJECT_ID) || "",
+      storageBucket: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET) || "",
+      messagingSenderId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID) || "",
+      appId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_APP_ID) || "",
+      measurementId: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID) || ""
     };
 
     let fbActive = false;
@@ -451,14 +450,16 @@
     ];
 
     // =========================================================================
-    // APP STATE INSTANTIATION
+    // APP STATE INSTANTIATION (Com chaves messages e theme inicializadas para evitar TypeErrors)
     // =========================================================================
     const state = {
       users: JSON.parse(localStorage.getItem("af_users_v2")) || MOCK_USERS_BASE,
       events: JSON.parse(localStorage.getItem("af_events_v2")) || MOCK_EVENTS_BASE,
       chats: JSON.parse(localStorage.getItem("af_chats_v2")) || MOCK_CHAT_BASE,
+      messages: JSON.parse(localStorage.getItem("af_messages")) || [],
       sales: JSON.parse(localStorage.getItem("af_sales")) || [],
       currentUser: JSON.parse(localStorage.getItem("af_current_user_v2")) || null,
+      theme: localStorage.getItem("af_theme") || 'light',
       currentView: 'home', // home, promoter-dashboard, admin-dashboard, user-account
       searchQuery: '',
       filterProvincia: '',
@@ -476,6 +477,7 @@
       localStorage.setItem("af_users_v2", JSON.stringify(state.users));
       localStorage.setItem("af_events_v2", JSON.stringify(state.events));
       localStorage.setItem("af_chats_v2", JSON.stringify(state.chats));
+      localStorage.setItem("af_messages", JSON.stringify(state.messages));
       localStorage.setItem("af_sales", JSON.stringify(state.sales));
       localStorage.setItem("af_current_user_v2", JSON.stringify(state.currentUser));
     }
@@ -579,7 +581,7 @@
           <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5 flex-shrink-0"></i>
           <p class="text-xs font-semibold">${message}</p>
         </div>
-        <button onclick="document.getElementById('toast-${id}').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">✕</button>
+        <button onclick="document.getElementById('toast-${id}').remove()" class="text-slate-400 hover:text-slate-650 dark:hover:text-white transition">✕</button>
       `;
       bin.appendChild(toast);
       lucide.createIcons();
@@ -1901,7 +1903,7 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-2 items-center justify-between pt-3 border-t border-slate-100 dark:border-brand-carddark/40">
+          <div class="flex flex-wrap gap-2 items-center justify-between pt-3 border-t border-slate-105 dark:border-brand-carddark/40">
             <div class="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
               ${CATEGORIAS.map(cat => `
                 <button onclick="selectCategoryFilter('${cat.id}')" class="px-4 py-2 rounded-full text-[10px] font-bold whitespace-nowrap uppercase tracking-wider transition ${state.selectedCategory === cat.id ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark hover:bg-slate-200 hover:text-black dark:hover:text-white'}">
@@ -2143,7 +2145,7 @@
               </div>
             ` : `
               <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
-                <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome || 'Promotor'}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
+                <p class="text-xs text-slate-455 mb-3">Caro ${state.currentUser?.nome || 'Promotor'}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
                 <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
               </div>
             `}
@@ -2283,7 +2285,7 @@
           return `
             <tr class="border-b border-slate-200 dark:border-brand-carddark hover:bg-slate-50 dark:hover:bg-brand-dark/10">
               <td class="p-3 font-bold text-slate-800 dark:text-white">${s.clientName}</td>
-              <td class="p-3 text-slate-500 truncate max-w-[150px]">${s.eventName}</td>
+              <td class="p-3 text-slate-505 truncate max-w-[150px]">${s.eventName}</td>
               <td class="p-3 font-semibold text-slate-705 dark:text-slate-350">${s.price}</td>
               <td class="p-3 text-brand-orange font-bold font-display">${s.commissionValue.toLocaleString()} Kz</td>
               <td class="p-3">
@@ -2304,7 +2306,7 @@
         tabContent = `
           <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 text-left">
             <h3 class="text-sm font-bold font-display uppercase text-brand-violet pb-3 border-b border-slate-202 dark:border-slate-800 mb-4 flex items-center gap-2"><i data-lucide="badge-percent" class="text-brand-orange w-4 h-4"></i> Controlo de Indicações e Comissões</h3>
-            <p class="text-[11px] text-slate-400 mb-4">Abaixo encontram-se todos os clientes obtidos através de indicações partilhadas pelos nossos embaixadores comunitários para os seus cartazes. Por favor valide os pagamentos e marque-os em conformidade.</p>
+            <p class="text-[11px] text-slate-404 mb-4">Abaixo encontram-se todos os clientes obtidos através de indicações partilhadas pelos nossos embaixadores comunitários para os seus cartazes. Por favor valide os pagamentos e marque-os em conformidade.</p>
             
             ${mySales.length > 0 ? `
               <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
@@ -2325,7 +2327,7 @@
                 </table>
               </div>
             ` : `
-              <div class="p-12 text-center text-slate-400 border border-dashed border-slate-200 dark:border-brand-carddark rounded-2xl">
+              <div class="p-12 text-center text-slate-404 border border-dashed border-slate-200 dark:border-brand-carddark rounded-2xl">
                 <i data-lucide="users" class="w-8 h-8 text-slate-350 mx-auto mb-2"></i>
                 <p class="text-xs font-semibold">Sem recomendações registadas para os seus cartazes de momento.</p>
               </div>
@@ -2729,7 +2731,7 @@
              } else if(m.mediaType === "video") {
                 mediaSection = `<div class="mt-2"><video src="${m.mediaUrl}" controls class="max-w-full max-h-48 rounded-xl object-contain"></video></div>`;
              } else if(m.mediaType === "audio") {
-                mediaSection = `<div class="mt-2 text-slate-800 dark:text-white"><audio src="${m.mediaUrl}" controls class="w-full max-w-xs"></audio></div>`;
+                mediaSection = `<div class="mt-2 text-slate-805 dark:text-white"><audio src="${m.mediaUrl}" controls class="w-full max-w-xs"></audio></div>`;
              } else {
                 mediaSection = `
                   <div class="mt-2 bg-black/10 dark:bg-black/30 p-2 rounded-xl flex items-center justify-between gap-3 text-[10px]">
@@ -2748,8 +2750,8 @@
                
                <div class="space-y-1 max-w-[75%] md:max-w-[70%]">
                   <div class="flex items-center gap-1.5 ${isMyMsg ? 'justify-end' : ''}">
-                     <span class="font-bold text-[10px] text-slate-800 dark:text-slate-250">${m.senderName}</span>
-                     <span class="text-[8px] text-slate-400">${m.dateStr || 'há bocado'}</span>
+                     <span class="font-bold text-[10px] text-slate-805 dark:text-slate-250">${m.senderName}</span>
+                     <span class="text-[8px] text-slate-404">${m.dateStr || 'há bocado'}</span>
                   </div>
                   
                   <div class="p-3 rounded-2xl ${bubbleColor} leading-relaxed text-left relative group">
@@ -2757,7 +2759,7 @@
                      ${mediaSection}
                      
                      ${isMyMsg ? `
-                       <button onclick="window.deleteGroupMessage('${m.id}')" class="absolute -left-6 bottom-2 p-1 text-slate-400 hover:text-red-500 rounded transition md:opacity-0 md:group-hover:opacity-100" title="Apagar Mensagem">
+                       <button onclick="window.deleteGroupMessage('${m.id}')" class="absolute -left-6 bottom-2 p-1 text-slate-404 hover:text-red-500 rounded transition md:opacity-0 md:group-hover:opacity-100" title="Apagar Mensagem">
                           ✕
                        </button>
                      ` : ''}
@@ -2851,10 +2853,10 @@
                  </table>
               </div>
             ` : `
-              <div class="p-12 text-center text-slate-400">
+              <div class="p-12 text-center text-slate-404">
                  <i data-lucide="frown" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
                  <p class="text-xs font-semibold">Sem comissões registadas.</p>
-                 <p class="text-[10px] text-slate-400 mt-1">Partilhe o seu link com os seus círculos secundários e amigos para ativar comissões!</p>
+                 <p class="text-[10px] text-slate-404 mt-1">Partilhe o seu link com os seus círculos secundários e amigos para ativar comissões!</p>
               </div>
             `}
          </div>
@@ -3192,7 +3194,7 @@
                 </div>
               ` : `
                 <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
-                  <p class="text-xs text-slate-400">Nenhum evento pendente aguardando validação de momento. Excelente trabalho!</p>
+                  <p class="text-xs text-slate-404">Nenhum evento pendente aguardando validação de momento. Excelente trabalho!</p>
                 </div>
               `}
             </div>
@@ -3254,7 +3256,7 @@
                       <h4 class="font-bold text-slate-800 dark:text-slate-100 uppercase leading-none truncate max-w-[200px]">${evt.nome}</h4>
                       <p class="text-[9px] text-slate-400 truncate capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
                       <p class="text-[10px] font-bold text-brand-orange">${evt.preco} | Divulgação: ${evt.plano}</p>
-                      <p class="text-[9px] text-slate-400">Promotor Original: ${evt.promotor}</p>
+                      <p class="text-[9px] text-slate-405">Promotor Original: ${evt.promotor}</p>
                       
                       <div class="pt-2 flex justify-end gap-1">
                         <button onclick="triggerPromoterEventEdit('${evt.id}')" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-semibold text-slate-500 hover:text-brand-orange transition">Editar</button>
@@ -3272,15 +3274,15 @@
             <div class="space-y-4">
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
-                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Total Indicações</span>
+                  <span class="text-[9px] text-slate-404 font-bold block uppercase tracking-wide">Total Indicações</span>
                   <span class="text-xl font-bold font-display text-brand-orange">${state.sales.length} recomendações</span>
                 </div>
                 <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
-                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Transações Consolidadas</span>
+                  <span class="text-[9px] text-slate-404 font-bold block uppercase tracking-wide">Transações Consolidadas</span>
                   <span class="text-xl font-bold font-display text-emerald-500">${state.sales.filter(s => s.status !== "Pendente").length} vendas</span>
                 </div>
                 <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
-                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Comissões Acumuladas</span>
+                  <span class="text-[9px] text-slate-404 font-bold block uppercase tracking-wide">Comissões Acumuladas</span>
                   <span class="text-xl font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">
                     ${state.sales.reduce((acc, s) => acc + s.commissionValue, 0).toLocaleString()} Kz
                   </span>
@@ -3288,7 +3290,7 @@
               </div>
 
               <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 text-left">
-                <h3 class="text-xs font-bold font-display uppercase text-brand-violet pb-2 border-b border-slate-100 dark:border-slate-800 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="text-brand-orange w-4 h-4"></i> Extrato de Comissões e Embaixadores</h3>
+                <h3 class="text-xs font-bold font-display uppercase text-brand-violet pb-2 border-b border-slate-105 dark:border-slate-800 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="text-brand-orange w-4 h-4"></i> Extrato de Comissões e Embaixadores</h3>
                 
                 ${state.sales.length > 0 ? `
                   <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
@@ -3308,7 +3310,7 @@
                           <tr class="border-b border-slate-200 dark:border-[#1F1942]/50 hover:bg-slate-50 dark:hover:bg-[#100D34]/25">
                             <td class="p-3">
                               <span class="font-bold text-slate-800 dark:text-white">${s.referrerName}</span>
-                              <span class="block text-[8px] text-slate-400 font-mono">ID-${s.referrerId}</span>
+                              <span class="block text-[8px] text-slate-404 font-mono">ID-${s.referrerId}</span>
                             </td>
                             <td class="p-3 text-slate-700 dark:text-slate-300 font-semibold">${s.clientName}</td>
                             <td class="p-3 text-slate-500 truncate max-w-[100px]">${s.promoterName}</td>
@@ -3323,7 +3325,7 @@
                     </table>
                   </div>
                 ` : `
-                  <div class="p-12 text-center text-slate-400">
+                  <div class="p-12 text-center text-slate-404">
                     <p class="text-xs font-semibold">Sem comissões de embaixadores registadas no sistema de momento.</p>
                   </div>
                 `}
