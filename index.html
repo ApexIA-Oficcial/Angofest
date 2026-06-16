@@ -105,8 +105,8 @@
 
       <!-- Instant Search Input -->
       <div class="hidden md:flex flex-1 max-w-sm relative">
-        <input type="text" id="header-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise shows, festas, promotores..." class="w-full h-10 pl-10 pr-4 rounded-full border border-slate-300 dark:border-brand-carddark/80 bg-slate-100 dark:bg-brand-carddark/40 outline-none focus:ring-2 focus:ring-brand-violet text-sm">
-        <i data-lucide="search" class="absolute left-3.5 top-2.5 text-slate-400 w-4 h-4"></i>
+        <input type="text" id="header-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise shows, festas, promotores..." class="w-full h-10 pl-4 pr-10 rounded-full border border-slate-300 dark:border-brand-carddark/80 bg-slate-100 dark:bg-brand-carddark/40 outline-none focus:ring-2 focus:ring-brand-violet text-sm">
+        <i data-lucide="search" class="absolute right-3.5 top-2.5 text-slate-400 w-4 h-4"></i>
       </div>
 
       <!-- Links Grid -->
@@ -138,8 +138,8 @@
     <!-- Mobile Drawer Container -->
     <div id="mobile-menu-drawer" class="hidden lg:hidden bg-white dark:bg-[#080415] border-t border-slate-200 dark:border-brand-carddark px-4 pb-6 pt-2">
       <div class="relative mb-4">
-        <input type="text" id="mobile-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise eventos..." class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-100 dark:bg-brand-carddark/50 outline-none text-sm">
-        <i data-lucide="search" class="absolute left-3 top-3 text-slate-400 w-4 h-4"></i>
+        <input type="text" id="mobile-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise eventos..." class="w-full h-10 pl-4 pr-10 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-100 dark:bg-brand-carddark/50 outline-none text-sm">
+        <i data-lucide="search" class="absolute right-3 top-3 text-slate-400 w-4 h-4"></i>
       </div>
       <div class="flex flex-col gap-3">
         <button onclick="navigateTo('home'); toggleMobileMenu()" class="text-left font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Início</button>
@@ -270,21 +270,27 @@
     // Pode introduzir aqui as credenciais do seu projeto Firebase diretamente.
     // O portal ativa automaticamente canais e persistência Firebase se detetar configs.
     const firebaseConfig = {
-      apiKey: "AIzaSyCySFZRQy8Coy6cqkuqenwwEv29zWRAnJo",
-      authDomain: "angofest.firebaseapp.com",
-      projectId: "angofest",
-      storageBucket: "angofest.firebasestorage.app",
-      messagingSenderId: "523773787531",
-      appId: "1:523773787531:web:f67f3d8752597948b4038e",
-      measurementId: "G-8EY7H14116"
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
     };
 
     let fbActive = false;
     let fbApp = null;
     let db = null;
+    let storage = null;
 
-    // Declarations for dynamically imported Firestore Functions
+    // Configurable core parameters
+    const PREMIUM_BASE_PRICE = 25000;
+    const PREMIUM_TAX_RATE = 0.20;
+
+    // Declarations for dynamically imported Firestore & Storage Functions
     let doc, setDoc, getDoc, getDocs, onSnapshot, collection, addDoc, updateDoc, deleteDoc;
+    let ref, uploadBytes, getDownloadURL;
 
     async function loadFirebase() {
       // Tentativa segura de inicialização dinâmica via CDNs do Firebase caso as credenciais estejam povoadas
@@ -292,6 +298,7 @@
         try {
           const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
           const firestoreModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+          const storageModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js");
           
           doc = firestoreModule.doc;
           setDoc = firestoreModule.setDoc;
@@ -303,10 +310,15 @@
           updateDoc = firestoreModule.updateDoc;
           deleteDoc = firestoreModule.deleteDoc;
 
+          ref = storageModule.ref;
+          uploadBytes = storageModule.uploadBytes;
+          getDownloadURL = storageModule.getDownloadURL;
+
           fbApp = initializeApp(firebaseConfig);
           db = firestoreModule.getFirestore(fbApp);
+          storage = storageModule.getStorage(fbApp);
           fbActive = true;
-          console.log("Canal Firebase sincronizado com sucesso!");
+          console.log("Canal Firebase sincronizado com sucesso (incluindo Storage)!");
           await initFirebaseSync();
         } catch(e) {
           console.error("Falha ao inicializar o banco de dados Firebase.", e);
@@ -582,9 +594,15 @@
       const container = document.getElementById("modal-container");
       const content = document.getElementById("modal-content");
       if(container && content) {
-        content.innerHTML = htmlContent;
+        content.innerHTML = `
+          <button onclick="closeModal()" class="absolute top-4 right-4 z-50 text-slate-400 hover:text-slate-650 dark:hover:text-white transition p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800" title="Fechar">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          ${htmlContent}
+        `;
         container.classList.remove("hidden");
         container.classList.add("flex");
+        document.body.classList.add("overflow-hidden");
         lucide.createIcons();
       }
     };
@@ -594,8 +612,23 @@
       if(container) {
         container.classList.add("hidden");
         container.classList.remove("flex");
+        document.body.classList.remove("overflow-hidden");
       }
     };
+
+    // Close on Escape or Click Outside
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById("modal-container");
+      if (container && e.target === container) {
+        closeModal();
+      }
+    });
 
     // =========================================================================
     // SPONSORED PROMO AUTOMATIC REPETITION (Every 60 Seconds Popup)
@@ -776,7 +809,10 @@
         const matchesSearch = !state.searchQuery || 
           evt.nome.toLowerCase().includes(state.searchQuery) ||
           evt.descricao.toLowerCase().includes(state.searchQuery) ||
-          evt.promotor.toLowerCase().includes(state.searchQuery);
+          evt.categoria.toLowerCase().includes(state.searchQuery) ||
+          evt.promotor.toLowerCase().includes(state.searchQuery) ||
+          evt.provincia.toLowerCase().includes(state.searchQuery) ||
+          evt.municipio.toLowerCase().includes(state.searchQuery);
 
         const matchesProvince = !state.filterProvincia || evt.provincia === state.filterProvincia;
         const matchesMunicipio = !state.filterMunicipio || evt.municipio === state.filterMunicipio;
@@ -806,6 +842,11 @@
       }
       if(view === 'admin-dashboard' && (!state.currentUser || state.currentUser.role !== 'admin')) {
         showToast("Acesso Restrito: Área reservada apenas para José Sorte ou Josué Bocoto.", "error");
+        openAuthDialog('login');
+        return;
+      }
+      if(view === 'member-dashboard' && !state.currentUser) {
+        showToast("Necessita de iniciar sessão para aceder à Comunidade AngoFest.", "error");
         openAuthDialog('login');
         return;
       }
@@ -858,7 +899,64 @@
       renderApp();
     };
 
-    window.dispatchNewEvent = function(e) {
+    window.handleFlyerUploadSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato inválido. Apenas JPG e PNG são permitidos.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      // Create an image object to validate the dimensions
+      const img = new Image();
+      img.onload = function() {
+        if (img.width !== 1080 || img.height !== 1350) {
+          showToast("O cartaz deve estar no formato 1080x1350px para garantir a melhor apresentação.", "error");
+          e.target.value = '';
+          document.getElementById('flyer-preview-container').classList.add('hidden');
+          document.getElementById('flyer-placeholder').classList.remove('hidden');
+          document.getElementById('flyer-dimension-info').classList.add('hidden');
+          return;
+        }
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('flyer-preview-img').src = evt.target.result;
+          document.getElementById('flyer-preview-container').classList.remove('hidden');
+          document.getElementById('flyer-placeholder').classList.add('hidden');
+          document.getElementById('flyer-dimension-info').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      };
+      img.onerror = function() {
+        showToast("Erro ao ler imagem do cartaz.", "error");
+        e.target.value = '';
+      };
+      img.src = URL.createObjectURL(file);
+    };
+
+    window.handleComprovativoUploadSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato de comprovativo de pagamento inválido. Apenas JPG, PNG ou PDF são aceites.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      // Show preview or details
+      document.getElementById('comprovativo-file-name').innerText = file.name;
+      document.getElementById('comprovativo-preview-container').classList.remove('hidden');
+      document.getElementById('comprovativo-placeholder').classList.add('hidden');
+    };
+
+    window.dispatchNewEvent = async function(e) {
       e.preventDefault();
       
       const nome = document.getElementById("form-evt-nome").value.trim();
@@ -870,19 +968,51 @@
       const desc = document.getElementById("form-evt-desc").value.trim();
       const prov = document.getElementById("form-evt-provincia").value;
       const mun = document.getElementById("form-evt-municipio").value;
-      const flyer = document.getElementById("form-evt-flyer").value.trim() || "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80";
       
       const planoNode = document.querySelector('input[name="form-evt-plano"]:checked');
       const plano = planoNode ? planoNode.value : "Base";
-      const comprovativo = document.getElementById("form-evt-comprovativo").value.trim();
+
+      // File inputs
+      const flyerFile = document.getElementById("form-evt-file-flyer").files[0];
+      const comprovativoFile = document.getElementById("form-evt-file-comprovativo").files[0];
 
       if(!nome || !local || !data || !hora || !preco || !desc) {
         showToast("Todos os campos assinalados com estrela são absolutamente obrigatórios.", "error");
         return;
       }
 
-      if(plano === "Premium" && !comprovativo) {
-        showToast("Os eventos Premium exigem obrigatoriamente a URL ou indicação do comprovativo de pagamento.", "error");
+      if (!flyerFile) {
+        showToast("Por favor carregar o Cartaz Oficial do Evento.", "error");
+        return;
+      }
+
+      if(plano === "Premium" && !comprovativoFile) {
+        showToast("Os eventos com plano Premium exigem obrigatoriamente o envio do Comprovativo de Pagamento.", "error");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submit-evt-btn");
+      const originalHTML = submitBtn ? submitBtn.innerHTML : "Submeter";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1.5 font-bold">⏳</span> Sincronizando ficheiros no Storage...`;
+      }
+
+      let flyerUrl = "";
+      let comprovativoUrl = "";
+
+      try {
+        flyerUrl = await window.uploadToStorageOrBase64(flyerFile, "events/flyers");
+        if (comprovativoFile) {
+          comprovativoUrl = await window.uploadToStorageOrBase64(comprovativoFile, "payments/receipts");
+        }
+      } catch (err) {
+        console.error("Erro interno ao enviar imagens:", err);
+        showToast("Falha técnica ao transmitir ficheiros para o Firebase.", "error");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHTML;
+        }
         return;
       }
 
@@ -898,13 +1028,15 @@
         hora: hora,
         categoria: categoria,
         preco: preco,
-        flyer: flyer,
+        flyer: flyerUrl,
         descricao: desc,
         status: "pendente", // ALL initially submitted are status: "pendente" ONLY until authorized
         plano: plano,
-        comprovativo: comprovativo,
+        comprovativo: comprovativoUrl,
+        precoCalculado: plano === "Premium" ? (PREMIUM_BASE_PRICE * (1 + PREMIUM_TAX_RATE)) : 0,
         rejeitado: false,
-        rejeitarMotivo: ""
+        rejeitarMotivo: "",
+        created_at: new Date().toISOString()
       };
 
       state.events.push(newEventObj);
@@ -912,7 +1044,7 @@
       if(fbActive) {
         setDoc(doc(db, "events", newEventObj.id), newEventObj).catch(err => console.error("Erro ao sincronizar novo evento:", err));
       }
-      showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte ou Josué Bocoto.");
+      showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte Francisco ou Josué Bocoto.");
       state.promoterTab = 'my-events';
       renderApp();
     };
@@ -1110,25 +1242,25 @@
     window.openAuthDialog = function(mode) {
       if(mode === 'login') {
         openModal(`
-          <div class="space-y-4 max-w-sm mx-auto">
+          <div class="space-y-4 max-w-sm mx-auto relative p-3">
             <div class="text-center">
               <h3 class="text-xl font-bold font-display text-brand-orange flex items-center justify-center gap-2">
-                <i data-lucide="log-in"></i> Acesso Seguro AngoFest
+                <i data-lucide="log-in" class="w-5 h-5"></i> Acesso Seguro AngoFest
               </h3>
               <p class="text-xs text-slate-400 mt-1">Insira os seus dados de conta autorizada</p>
             </div>
             
             <form onsubmit="handleInAppLogin(event)" class="space-y-3 text-xs">
               <div>
-                <label class="block font-semibold mb-1">Telefone (Angola)</label>
-                <input type="text" id="login-form-phone" placeholder="9xxxxxxxx" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+                <label class="block font-semibold mb-1 text-slate-400">Telefone (Angola)</label>
+                <input type="text" id="login-form-phone" placeholder="9xxxxxxxx" class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               <div>
-                <label class="block font-semibold mb-1">Palavra-passe</label>
-                <input type="password" id="login-form-pass" placeholder="Palavra-passe" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+                <label class="block font-semibold mb-1 text-slate-400">Palavra-passe</label>
+                <input type="password" id="login-form-pass" placeholder="Palavra-passe" class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
-                Iniciar Sessão
+              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-md">
+                <i data-lucide="unlock" class="w-4 h-4"></i> Iniciar Sessão
               </button>
             </form>
             <div class="text-center pt-3 border-t border-slate-200 dark:border-brand-carddark text-xs">
@@ -1139,52 +1271,223 @@
         `);
       } else {
         openModal(`
-          <div class="space-y-4 max-w-md mx-auto">
+          <div class="space-y-4 max-w-md mx-auto relative p-1">
             <div class="text-center">
               <h3 class="text-xl font-bold font-display text-brand-violet flex items-center justify-center gap-2">
-                <i data-lucide="user-plus"></i> Cadastro de Membro ou Promotor
+                <i data-lucide="user-plus" class="w-5 h-5"></i> Cadastro de Membro ou Promotor
               </h3>
               <p class="text-xs text-slate-400 mt-1">Os dados passam por aprovação de José Sorte ou Josué Bocoto</p>
             </div>
 
-            <form onsubmit="handleInAppRegister(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleInAppRegister(event)" class="space-y-3.5 text-xs">
               <div>
-                <label class="block font-semibold mb-1">Nome Completo</label>
-                <input type="text" id="reg-form-nome" placeholder="ex: Ricardo Silva" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                <label class="block font-semibold mb-1 text-slate-400">Nome Completo</label>
+                <input type="text" id="reg-form-nome" placeholder="ex: Ricardo Silva" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block font-semibold mb-1">Telefone de Angola</label>
-                  <input type="text" id="reg-form-phone" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                  <label class="block font-semibold mb-1 text-slate-400">Telefone de Angola</label>
+                  <input type="text" id="reg-form-phone" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
                 </div>
                 <div>
-                  <label class="block font-semibold mb-1">Idade</label>
-                  <input type="number" id="reg-form-idade" placeholder="Idade" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                  <label class="block font-semibold mb-1 text-slate-400">Idade</label>
+                  <input type="number" id="reg-form-idade" placeholder="Idade" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
                 </div>
               </div>
               <div>
-                <label class="block font-semibold mb-1">Perfil de Acesso</label>
-                <select id="reg-form-role" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark">
+                <label class="block font-semibold mb-1 text-slate-400">Perfil de Acesso</label>
+                <select id="reg-form-role" onchange="window.handleRegRoleChange(this.value)" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-[#2a1b5c] text-slate-800 dark:text-white outline-none">
                   <option value="user">Membro Geral (Quero ver e interagir)</option>
-                  <option value="promoter">Promotor de Eventos (Quero submeter cartazes e planos)</option>
+                  <option value="promoter">Promotor de Eventos (Cadastro de Promotor Completo)</option>
                 </select>
               </div>
+
+              <!-- DYNAMIC MEMBER FIELDS -->
+              <div id="member-additional-fields" class="space-y-3.5 p-3.5 bg-brand-violet/5 border border-brand-violet/10 rounded-2xl animate-fade-in">
+                <span class="block text-[10px] font-bold text-brand-violet uppercase tracking-wide">Ficha Adicional do Membro Comunitário</span>
+                
+                <!-- Profile picture selection -->
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-400">Foto de Perfil (Obrigatório) *</label>
+                  <div class="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-xl bg-slate-50 dark:bg-brand-dark/10 cursor-pointer overflow-hidden text-center hover:border-brand-violet transition animate-pulse" onclick="document.getElementById('reg-form-file-avatar').click()">
+                    <input type="file" id="reg-form-file-avatar" accept="image/jpeg,image/png" class="hidden" onchange="window.handleMemberAvatarSelect(event)">
+                    <div id="avatar-placeholder" class="space-y-1">
+                      <i data-lucide="camera" class="w-5 h-5 text-slate-400 mx-auto"></i>
+                      <span class="block text-[10px] text-slate-500 font-semibold">Escolher foto de perfil</span>
+                      <span class="block text-[8px] text-slate-400">PNG / JPG</span>
+                    </div>
+                    <div id="avatar-preview-container" class="hidden flex items-center gap-2 p-1 font-semibold text-[10px] text-brand-violet bg-brand-violet/10 border border-brand-violet/20 rounded-xl">
+                      <div class="w-8 h-8 rounded-full overflow-hidden border border-brand-violet">
+                        <img id="avatar-preview-img" src="" class="w-full h-full object-cover">
+                      </div>
+                      <span>Foto selecionada</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">Província (Opcional)</label>
+                    <select id="reg-form-provincia" onchange="window.cascadeRegMunicipios(this.value)" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                      <option value="">Selecione...</option>
+                      <option value="Luanda">Luanda</option>
+                      <option value="Benguela">Benguela</option>
+                      <option value="Huambo">Huambo</option>
+                      <option value="Cabinda">Cabinda</option>
+                      <option value="Huíla font-semibold">Huíla</option>
+                      <option value="Uíge">Uíge</option>
+                      <option value="Malanje">Malanje</option>
+                      <option value="Namibe">Namibe</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">Município (Opcional)</label>
+                    <select id="reg-form-municipio" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                      <option value="">Província primeiro...</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Interests checklist multi-values -->
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-400">Interesses Culturais (Opcional)</label>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <label class="inline-flex items-center gap-1.5 px-2 bg-white dark:bg-[#120B2E] border border-slate-205 dark:border-[#2e1d6d] rounded-xl cursor-pointer hover:border-brand-orange transition select-none">
+                       <input type="checkbox" name="reg-interests" value="Música" class="rounded text-brand-violet focus:ring-brand-orange">
+                       <span class="text-[10px] text-slate-705 dark:text-slate-300">Música</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2 bg-white dark:bg-[#120B2E] border border-slate-205 dark:border-[#2e1d6d] rounded-xl cursor-pointer hover:border-brand-orange transition select-none">
+                       <input type="checkbox" name="reg-interests" value="Festas" class="rounded text-brand-violet focus:ring-brand-orange">
+                       <span class="text-[10px] text-slate-705 dark:text-slate-300">Festas</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2 bg-white dark:bg-[#120B2E] border border-slate-205 dark:border-[#2e1d6d] rounded-xl cursor-pointer hover:border-brand-orange transition select-none">
+                       <input type="checkbox" name="reg-interests" value="Shows" class="rounded text-brand-violet focus:ring-brand-orange">
+                       <span class="text-[10px] text-slate-705 dark:text-slate-300">Shows</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2 bg-white dark:bg-[#120B2E] border border-slate-205 dark:border-[#2e1d6d] rounded-xl cursor-pointer hover:border-brand-orange transition select-none">
+                       <input type="checkbox" name="reg-interests" value="Cultura" class="rounded text-brand-violet focus:ring-brand-orange">
+                       <span class="text-[10px] text-slate-705 dark:text-slate-300">Cultura</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2 bg-white dark:bg-[#120B2E] border border-slate-205 dark:border-[#2e1d6d] rounded-xl cursor-pointer hover:border-brand-orange transition select-none">
+                       <input type="checkbox" name="reg-interests" value="Eventos" class="rounded text-brand-violet focus:ring-brand-orange">
+                       <span class="text-[10px] text-slate-705 dark:text-slate-300">Eventos</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DYNAMIC PROMOTER FIELDS -->
+              <div id="promoter-additional-fields" class="hidden space-y-3.5 p-3.5 bg-brand-violet/5 border border-brand-violet/10 rounded-2xl animate-fade-in">
+                <span class="block text-[10px] font-bold text-brand-violet uppercase tracking-wide">Ficha Cadastral Profissional do Promotor</span>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">WhatsApp Oficial</label>
+                    <input type="text" id="reg-form-whatsapp" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">Email Comercial</label>
+                    <input type="email" id="reg-form-email" placeholder="comercial@exemplo.com" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-400">Logotipo ou Foto do Promotor *</label>
+                  <div class="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-xl bg-slate-50 dark:bg-brand-dark/10 cursor-pointer overflow-hidden text-center hover:border-brand-violet transition" onclick="document.getElementById('reg-form-file-logo').click()">
+                    <input type="file" id="reg-form-file-logo" accept="image/jpeg,image/png" class="hidden" onchange="window.handlePromoterLogoSelect(event)">
+                    <div id="logo-placeholder" class="space-y-1">
+                      <i data-lucide="image-plus" class="w-5 h-5 text-slate-400 mx-auto"></i>
+                      <span class="block text-[10px] text-slate-500 font-semibold">Escolher foto do dispositivo</span>
+                      <span class="block text-[8px] text-slate-400">PNG / JPG</span>
+                    </div>
+                    <div id="logo-preview-container" class="hidden flex items-center gap-2 p-1 font-semibold text-[10px] text-brand-violet bg-brand-violet/10 border border-brand-violet/20 rounded-xl">
+                      <div class="w-8 h-8 rounded-full overflow-hidden border border-brand-violet">
+                        <img id="logo-preview-img" src="" class="w-full h-full object-cover">
+                      </div>
+                      <span>Logotipo selecionado</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <label class="block font-semibold mb-1">Defina a sua Senha</label>
-                <input type="password" id="reg-form-pass" placeholder="Senha de Acesso" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                <label class="block font-semibold mb-1 text-slate-400">Defina a sua Senha</label>
+                <input type="password" id="reg-form-pass" placeholder="Senha de Acesso" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               
               <div class="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-xl text-[10px] text-slate-400 leading-normal">
                 ⚠️ Importante: Após submeter, os administradores verificarão o seu número de telefone de Angola. A ativação ocorre em até poucas horas.
               </div>
 
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
-                Submeter Pedido de Aderência
+              <button type="submit" id="reg-submit-btn" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-md">
+                <i data-lucide="user-check" class="w-4 h-4"></i> Submeter Pedido de Aderência
               </button>
             </form>
           </div>
         `);
       }
+    };
+
+    window.handleRegRoleChange = function(role) {
+      const promoterWr = document.getElementById("promoter-additional-fields");
+      const memberWr = document.getElementById("member-additional-fields");
+      
+      if(role === "promoter") {
+        if(promoterWr) promoterWr.classList.remove("hidden");
+        if(memberWr) memberWr.classList.add("hidden");
+      } else {
+        if(promoterWr) promoterWr.classList.add("hidden");
+        if(memberWr) memberWr.classList.remove("hidden");
+      }
+    };
+
+    window.cascadeRegMunicipios = function(prov) {
+       const select = document.getElementById("reg-form-municipio");
+       if(!select) return;
+       if (!prov) {
+          select.innerHTML = `<option value="">Escolha a província...</option>`;
+          return;
+       }
+       const list = PROVINCIAS_ANGOLA[prov] || [];
+       select.innerHTML = list.map(m => `<option value="${m}">${m}</option>`).join('');
+    };
+
+    window.handleMemberAvatarSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato de foto de perfil inválido. Por favor envie apenas JPG ou PNG.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('avatar-preview-img').src = evt.target.result;
+        document.getElementById('avatar-preview-container').classList.remove('hidden');
+        document.getElementById('avatar-placeholder').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.handlePromoterLogoSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato de foto inválido. Por favor envie apenas JPG ou PNG.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('logo-preview-img').src = evt.target.result;
+        document.getElementById('logo-preview-container').classList.remove('hidden');
+        document.getElementById('logo-placeholder').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
     };
 
     window.handleInAppLogin = function(e) {
@@ -1216,11 +1519,32 @@
       }
     };
 
-    window.handleInAppRegister = function(e) {
+    window.uploadToStorageOrBase64 = async function(file, folderPath) {
+      if (fbActive && storage) {
+        try {
+          const fileRef = ref(storage, `${folderPath}/${Date.now()}_${file.name}`);
+          const snapshot = await uploadBytes(fileRef, file);
+          return await getDownloadURL(snapshot.ref);
+        } catch (error) {
+          console.error("Erro ao fazer upload para o Firebase Storage:", error);
+          showToast("Erro de rede no upload, convertendo para cópia offline.", "warning");
+        }
+      }
+      
+      // Fallback: Base64 string for offline session persistence
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    };
+
+    window.handleInAppRegister = async function(e) {
       e.preventDefault();
       const nome = document.getElementById("reg-form-nome").value.trim();
       const phone = document.getElementById("reg-form-phone").value.trim();
-      const idade = parseInt(document.getElementById("reg-form-idade").value);
+      const idadeValue = document.getElementById("reg-form-idade").value;
+      const idade = idadeValue ? parseInt(idadeValue) : null;
       const role = document.getElementById("reg-form-role").value;
       const pass = document.getElementById("reg-form-pass").value.trim();
 
@@ -1235,13 +1559,78 @@
         return;
       }
 
+      const submitBtn = document.getElementById("reg-submit-btn");
+      const originalHTML = submitBtn ? submitBtn.innerHTML : "Submeter Pedido de Aderência";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Processando dados de cadastro...`;
+      }
+
+      let logoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+      let whatsapp = "";
+      let email = "";
+      let provincia = "";
+      let municipio = "";
+      let interesses = [];
+
+      if (role === 'promoter') {
+        whatsapp = document.getElementById("reg-form-whatsapp").value.trim();
+        email = document.getElementById("reg-form-email").value.trim();
+        const logoFile = document.getElementById("reg-form-file-logo").files[0];
+        if (logoFile) {
+          try {
+            logoUrl = await window.uploadToStorageOrBase64(logoFile, "promoters/logos");
+          } catch(err) {
+            console.error("Erro no processamento do logotipo:", err);
+          }
+        } else {
+          showToast("A foto/logotipo institucional do promotor é estritamente obrigatória.", "error");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+          }
+          return;
+        }
+      } else {
+        // General Member signup values
+        provincia = document.getElementById("reg-form-provincia").value;
+        municipio = document.getElementById("reg-form-municipio").value;
+        
+        // Checklist loop
+        const boxes = document.querySelectorAll('input[name="reg-interests"]:checked');
+        boxes.forEach(b => interesses.push(b.value));
+
+        const avatarFile = document.getElementById("reg-form-file-avatar").files[0];
+        if (avatarFile) {
+          try {
+            logoUrl = await window.uploadToStorageOrBase64(avatarFile, "members/profiles");
+          } catch(err) {
+            console.error("Erro no processamento do avatar de membro:", err);
+          }
+        } else {
+          showToast("A Foto de Perfil é obrigatória para o registo na comunidade.", "error");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+          }
+          return;
+        }
+      }
+
       const newUserObj = {
         telefone: phone,
         nome: nome,
         idade: idade,
         role: role,
         aprovado: false, // Needing administration greenlight
-        pass: pass
+        pass: pass,
+        logoUrl: logoUrl,
+        whatsapp: whatsapp,
+        email: email,
+        provincia: provincia || null,
+        municipio: municipio || null,
+        interesses: interesses,
+        created_at: new Date().toISOString()
       };
 
       state.users.push(newUserObj);
@@ -1250,7 +1639,7 @@
         setDoc(doc(db, "users", phone), newUserObj).catch(err => console.error("Erro ao sincronizar novo utilizador:", err));
       }
       closeModal();
-      showToast("Sucesso! A sua inscrição nacional de promotor/utilizador está em fila de revisão de cadastro.");
+      showToast("Sucesso! O seu pedido de registo foi enviado para aprovação por José Sorte Francisco ou Josué Bocoto.");
       renderApp();
     };
 
@@ -1313,9 +1702,9 @@
                   <p class="flex items-center gap-1.5 text-emerald-500"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Venda Autorizada</p>
                 </div>
 
-                <a href="https://wa.me/244931352915?text=Olá,%20gostaria%20de%20saber%20onde%20comprar%20e%20adquirir%20cartões%20para%20o%20evento%20${encodeURIComponent(evt.nome)}%20pelo%20AngoFest!" target="_blank" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-2.5 font-bold flex items-center justify-center gap-1.5 transform active:scale-95 transition-all">
+                <button onclick="window.initiatePurchaseWithReferral('${evt.id}')" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-2.5 font-bold flex items-center justify-center gap-1.5 transform active:scale-95 transition-all">
                   <i data-lucide="ticket" class="w-4 h-4"></i> Comprar via WhatsApp
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -1345,13 +1734,15 @@
             viewRouteBtn = `<button onclick="navigateTo('admin-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-orange-500/10 text-brand-orange hover:bg-orange-500/20 transition flex items-center gap-1"><i data-lucide="sliders" class="w-3.5 h-3.5"></i> Painel Admin</button>`;
           } else if(user.role === 'promoter') {
             viewRouteBtn = `<button onclick="navigateTo('promoter-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-purple-500/10 text-brand-violet hover:bg-purple-500/20 transition flex items-center gap-1"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Área Promotor</button>`;
+          } else if(user.role === 'user') {
+            viewRouteBtn = `<button onclick="navigateTo('member-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-violet-500/10 text-brand-violet hover:bg-violet-500/20 transition flex items-center gap-1"><i data-lucide="users" class="w-3.5 h-3.5"></i> Comunidade</button>`;
           }
 
           headerAuth.innerHTML = `
             <div class="flex items-center gap-2">
               <div class="hidden sm:flex flex-col text-right">
                 <span class="text-xs font-bold font-display truncate max-w-[120px] mb-0.5">${user.nome}</span>
-                <span class="text-[9px] text-slate-400 leading-none capitalize">${user.role}</span>
+                <span class="text-[9px] text-slate-400 leading-none capitalize">${user.role === 'user' ? 'Membro' : user.role}</span>
               </div>
               <div class="w-8 h-8 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center font-display font-bold text-xs uppercase" title="${user.nome}">
                 ${user.nome.substring(0, 1)}
@@ -1378,6 +1769,8 @@
         renderPromoterDashboard(workspace);
       } else if (state.currentView === 'admin-dashboard') {
         renderAdminDashboard(workspace);
+      } else if (state.currentView === 'member-dashboard') {
+        renderMemberDashboard(workspace);
       }
 
       lucide.createIcons();
@@ -1592,183 +1985,370 @@
     function renderPromoterDashboard(container) {
       const myEvents = state.events.filter(e => e.promotorPhone === state.currentUser?.telefone);
       
+      // Ensure default tab is valid
+      if (!state.promoterTab || (state.promoterTab !== 'my-profile' && state.promoterTab !== 'my-events' && state.promoterTab !== 'submit-form' && state.promoterTab !== 'references')) {
+        state.promoterTab = 'my-profile';
+      }
+
+      // Pre-calculate tab active states
+      const tabProfileClass = state.promoterTab === 'my-profile' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+      const tabEventsClass = state.promoterTab === 'my-events' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+      const tabSubmitClass = state.promoterTab === 'submit-form' ? 'bg-gradient-to-r from-brand-violet to-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+      const tabReferencesClass = state.promoterTab === 'references' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+
+      const basePriceFormatted = PREMIUM_BASE_PRICE.toLocaleString();
+      const taxFormatted = (PREMIUM_BASE_PRICE * PREMIUM_TAX_RATE).toLocaleString();
+      const totalFormatted = (PREMIUM_BASE_PRICE * (1 + PREMIUM_TAX_RATE)).toLocaleString();
+
+      let tabContent = '';
+
+      if (state.promoterTab === 'my-profile') {
+        tabContent = `
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Profile details box -->
+            <div class="p-6 bg-white dark:bg-brand-carddark rounded-2xl border border-slate-200 dark:border-brand-carddark space-y-4 md:col-span-2">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <i data-lucide="user-check" class="w-4 h-4"></i> Informações de Cadastro Nacional
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Nome Institucional</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.nome || ''}</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Idade do Titular</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.idade || ''} anos</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Contacto WhatsApp</span>
+                  <span class="block font-semibold text-slate-850 dark:text-white flex items-center gap-1">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5 text-emerald-500"></i> ${state.currentUser?.whatsapp || 'Não inserido'}
+                  </span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Email Profissional</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.email || 'comercial@exemplo.com'}</span>
+                </div>
+              </div>
+              
+              <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                  <span class="block text-slate-400 text-[10px]">Utilizador ID:</span>
+                  <span class="block font-mono text-[9px] font-bold text-brand-orange">UID-${state.currentUser?.telefone || ''}</span>
+                </div>
+                <span class="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full font-bold uppercase text-[9px] border border-emerald-500/25">Aprovado por Admins</span>
+              </div>
+            </div>
+
+            <!-- Payments / billing Box -->
+            <div class="p-6 bg-gradient-to-br from-brand-violet/5 to-brand-orange/5 rounded-2xl border border-brand-violet/10 space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-orange flex items-center gap-1.5 pb-2 border-b border-brand-violet/10">
+                <i data-lucide="wallet" class="w-4 h-4"></i> Faturação & Taxas
+              </h3>
+              <div class="space-y-3.5 text-xs">
+                <div class="p-3 bg-white dark:bg-[#120B2E]/60 border border-slate-200 dark:border-brand-carddark rounded-xl">
+                  <span class="text-[10px] text-slate-450 uppercase font-bold block">Plano Selecionado</span>
+                  <span class="text-sm font-bold text-brand-violet uppercase block mt-0.5">Premium Angola</span>
+                  
+                  <div class="mt-2 text-[10px] space-y-1 text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <div class="flex justify-between">
+                      <span>Valor Base:</span>
+                      <span class="font-bold text-slate-750 dark:text-white">${basePriceFormatted} Kz</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Taxa Comercial (+${PREMIUM_TAX_RATE * 100}%):</span>
+                      <span class="font-bold text-slate-750 dark:text-white">${taxFormatted} Kz</span>
+                    </div>
+                    <div class="flex justify-between border-t border-dashed border-slate-200 dark:border-[#2a1b5c] pt-1.5 mt-1 font-bold text-brand-orange text-[11px]">
+                      <span>Total Líquido:</span>
+                      <span>${totalFormatted} Kz</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <span class="block text-[8px] text-slate-400 leading-normal">
+                  * O Plano Base de publicações comuns é sempre gratuito. Valores calculados automaticamente de acordo com as diretrizes de José Sorte Francisco e Josué Bocoto.
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (state.promoterTab === 'my-events') {
+        const eventsListHtml = myEvents.map(evt => {
+          let badgeClass = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
+          let label = "Pendente";
+          if (evt.status === "aprovado") {
+            badgeClass = "bg-emerald-555 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
+            label = "Aprovado Oficial";
+          } else if (evt.status === "rejeitado") {
+            badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+            label = "Recusado / Erro de Comprovativo";
+          }
+
+          return `
+            <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-[#120B2E]/50 flex gap-4 relative">
+              <div class="w-20 h-24 rounded-lg bg-neutral-900 border overflow-hidden flex-shrink-0">
+                <img src="${evt.flyer}" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1 space-y-2">
+                <h4 class="font-bold text-xs uppercase text-slate-800 dark:text-slate-100 leading-tight">${evt.nome}</h4>
+                <p class="text-[10px] text-slate-400 capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
+                <p class="text-xs font-bold text-brand-orange">${evt.preco}</p>
+                
+                <div class="flex items-center gap-1.5 text-[10px]">
+                  <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeClass}">${label}</span>
+                  <span class="text-[9px] font-bold uppercase text-slate-400 px-1 border border-slate-200 dark:border-slate-800 rounded">${evt.plano}</span>
+                </div>
+
+                ${evt.status === "rejeitado" ? `
+                  <div class="p-2 bg-red-500/5 text-red-500 rounded text-[9px] font-semibold mt-1">
+                    <strong>Motivo:</strong> ${evt.rejeitarMotivo || 'Cartaz impróprio ou comprovativo não verificado.'}
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Actions bar -->
+              <div class="absolute top-4 right-4 flex gap-1">
+                <button onclick="triggerPromoterEventEdit('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-brand-orange transition" title="Editar"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                <button onclick="triggerPromoterEventRemove('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-red-500 transition" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        tabContent = `
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold font-display uppercase tracking-wider text-slate-705 dark:text-slate-300">Histórico de Candidaturas & Eventos Enviados</h3>
+            ${myEvents.length > 0 ? `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${eventsListHtml}
+              </div>
+            ` : `
+              <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
+                <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome || 'Promotor'}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
+                <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
+              </div>
+            `}
+          </div>
+        `;
+      } else if (state.promoterTab === 'submit-form') {
+        tabContent = `
+          <div class="bg-white dark:bg-[#120B2E]/60 border border-slate-202 dark:border-brand-carddark/60 rounded-3xl p-6 max-w-2xl mx-auto">
+            <h3 class="text-lg font-bold font-display uppercase text-brand-orange pb-3 border-b border-slate-200 dark:border-brand-carddark/50 mb-5">Submissão Oficial de Cartazes</h3>
+            
+            <form onsubmit="dispatchNewEvent(event)" class="space-y-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Título do Evento *</label>
+                <input type="text" id="form-evt-nome" placeholder="Ex: Mega Show Reencontro" class="w-full text-slate-800 dark:text-white p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs focus:ring-1 focus:ring-brand-violet outline-none" required>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Província *</label>
+                  <select id="form-evt-provincia" onchange="cascadeFormMunicipios(this.value)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-white outline-none">
+                    ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}">${p}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Município *</label>
+                  <select id="form-evt-municipio" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-white outline-none">
+                    <!-- Cascade Loaded dynamically -->
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Data *</label>
+                  <input type="date" id="form-evt-data" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Hora *</label>
+                  <input type="time" id="form-evt-hora" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Categoria *</label>
+                  <select id="form-evt-categoria" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-755 dark:text-white_align">
+                    ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Preço Normal (Kz ou escreva: Gratuito) *</label>
+                  <input type="text" id="form-evt-preco" placeholder="Ex: 5.000 Kz" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Local Físico / Sala *</label>
+                <input type="text" id="form-evt-local" placeholder="Ex: Multiusos da Kilamba, Sala A" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+              </div>
+
+              <!-- DIRECT CARTEZ UPLOAD BLOCK -->
+              <div>
+                <label class="block font-bold text-slate-400 mb-1 flex items-center gap-1.5">
+                  <i data-lucide="image" class="w-4 h-4 text-brand-orange"></i> Enviar Cartaz do Evento *
+                </label>
+                <div class="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-2xl p-6 bg-slate-50 dark:bg-brand-dark/10 text-center cursor-pointer transition hover:border-brand-orange group" onclick="document.getElementById('form-evt-file-flyer').click()">
+                  <input type="file" id="form-evt-file-flyer" accept="image/jpeg,image/png" class="hidden" onchange="window.handleFlyerUploadSelect(event)" required>
+                  <div id="flyer-placeholder" class="space-y-2">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-brand-orange transition mx-auto"></i>
+                    <span class="block text-xs font-semibold text-slate-500">Clique para carregar o seu cartaz</span>
+                    <span class="block text-[10px] text-slate-400 leading-relaxed">Apenas JPG ou PNG com proporção obrigatória de 4:5 (1080 x 1350px)</span>
+                  </div>
+                  <div id="flyer-preview-container" class="hidden w-28 aspect-[4/5] rounded-xl overflow-hidden border border-brand-orange shadow-md relative">
+                    <img id="flyer-preview-img" src="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition flex items-center justify-center text-[9px] text-white font-bold">Alterar Cartaz</div>
+                  </div>
+                </div>
+                <p id="flyer-dimension-info" class="hidden text-[10px] text-emerald-500 font-semibold mt-1">✓ Dimensão perfeita de cartaz validada: 1080x1350px</p>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Descrição Detalhada do Evento *</label>
+                <textarea id="form-evt-desc" rows="4" placeholder="Indique as atrações principais, políticas de entrada, contactos de cartões..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-805 dark:text-white" required></textarea>
+              </div>
+
+              <!-- Plano Escolha -->
+              <div class="p-4 rounded-2xl bg-brand-violet/5 border border-brand-violet/20 space-y-3">
+                <label class="block font-bold text-sm tracking-wide text-brand-violet">Escolha o seu Plano de Divulgação</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label class="p-3 bg-white dark:bg-[#120B2E] border border-slate-200 dark:border-brand-carddark rounded-xl flex items-start gap-2 cursor-pointer">
+                    <input type="radio" name="form-evt-plano" value="Base" class="mt-1" checked onchange="window.toggleReceiptViewForPlano('Base')">
+                    <div>
+                      <span class="block font-bold text-xs uppercase text-slate-700 dark:text-white">DIVULGAÇÃO BASE</span>
+                      <span class="block text-[10px] text-slate-400 mt-0.5">Surgimento livre no catálogo geral filtrado por província.</span>
+                      <span class="block text-xs font-bold text-green-500 mt-2">Gratuito</span>
+                    </div>
+                  </label>
+                  <label class="p-3 bg-white dark:bg-[#120B2E] border border-brand-orange rounded-xl flex items-start gap-2 cursor-pointer">
+                    <input type="radio" name="form-evt-plano" value="Premium" class="mt-1" onchange="window.toggleReceiptViewForPlano('Premium')">
+                    <div>
+                      <span class="block font-bold text-xs uppercase text-brand-orange">DIVULGAÇÃO PREMIUM</span>
+                      <span class="block text-[10px] text-slate-400 mt-0.5">Topo prioritário, slide horizontais de elite, popup automático repetitivo.</span>
+                      <span class="block text-xs font-bold text-brand-violet mt-2">${totalFormatted} Kz Líquido</span>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- DIRECT COMPROVATIVO UPLOAD BLOCK -->
+                <div id="comprovativo-wrapper" class="hidden space-y-1.5 pt-2">
+                  <label class="block font-bold text-brand-orange flex items-center gap-1.5">
+                    <i data-lucide="file-check" class="w-4 h-4 text-brand-orange"></i> Enviar Comprovativo de Pagamento *
+                  </label>
+                  <div class="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-2xl p-5 bg-slate-50 dark:bg-brand-dark/10 text-center cursor-pointer transition hover:border-brand-orange" onclick="document.getElementById('form-evt-file-comprovativo').click()">
+                    <input type="file" id="form-evt-file-comprovativo" accept="image/jpeg,image/png,application/pdf" class="hidden" onchange="window.handleComprovativoUploadSelect(event)">
+                    <div id="comprovativo-placeholder" class="space-y-1.5">
+                      <i data-lucide="file-plus" class="w-7 h-7 text-slate-400 mx-auto"></i>
+                      <span class="block text-[11px] font-semibold text-slate-500">Clique para anexar comprovativo</span>
+                      <span class="block text-[9px] text-slate-400">Suporta formato JPG, PNG ou PDF</span>
+                    </div>
+                    <div id="comprovativo-preview-container" class="hidden flex items-center gap-2 p-2 bg-emerald-500/10 text-emerald-555 border border-emerald-500/30 rounded-xl text-[10px] font-semibold">
+                      <i data-lucide="check-circle" class="w-4 h-4"></i>
+                      <span id="comprovativo-file-name" class="truncate max-w-[150px]">comprovativo.pdf</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="submit-evt-btn" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-brand-violet/20">
+                <i data-lucide="check-circle-2"></i> Submeter para José Sorte & Josué Bocoto
+              </button>
+            </form>
+          </div>
+        `;
+      } else if (state.promoterTab === 'references') {
+        const mySales = state.sales.filter(s => s.promoterPhone === state.currentUser?.telefone);
+        const salesRows = mySales.map(s => {
+          return `
+            <tr class="border-b border-slate-200 dark:border-brand-carddark hover:bg-slate-50 dark:hover:bg-brand-dark/10">
+              <td class="p-3 font-bold text-slate-800 dark:text-white">${s.clientName}</td>
+              <td class="p-3 text-slate-500 truncate max-w-[150px]">${s.eventName}</td>
+              <td class="p-3 font-semibold text-slate-705 dark:text-slate-350">${s.price}</td>
+              <td class="p-3 text-brand-orange font-bold font-display">${s.commissionValue.toLocaleString()} Kz</td>
+              <td class="p-3">
+                <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase ${s.status === 'Confirmada' ? 'bg-emerald-500/10 text-emerald-554' : s.status === 'Paga' ? 'bg-purple-500/10 text-brand-violet' : 'bg-yellow-500/10 text-yellow-505'}">${s.status}</span>
+              </td>
+              <td class="p-3 text-right">
+                ${s.status === 'Pendente' ? `
+                  <button onclick="window.confirmReferralSale('${s.id}', 'Confirmada')" class="px-2.5 py-1.5 bg-emerald-505 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] uppercase rounded-lg transition shadow-sm inline-flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Confirmar</button>
+                ` : ''}
+                ${s.status === 'Confirmada' ? `
+                  <button onclick="window.confirmReferralSale('${s.id}', 'Paga')" class="px-2.5 py-1.5 bg-brand-violet hover:bg-brand-violet/95 text-white font-bold text-[9px] uppercase rounded-lg transition shadow-sm inline-flex items-center gap-1"><i data-lucide="award" class="w-3.5 h-3.5"></i> Pagar</button>
+                ` : ''}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tabContent = `
+          <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 text-left">
+            <h3 class="text-sm font-bold font-display uppercase text-brand-violet pb-3 border-b border-slate-202 dark:border-slate-800 mb-4 flex items-center gap-2"><i data-lucide="badge-percent" class="text-brand-orange w-4 h-4"></i> Controlo de Indicações e Comissões</h3>
+            <p class="text-[11px] text-slate-400 mb-4">Abaixo encontram-se todos os clientes obtidos através de indicações partilhadas pelos nossos embaixadores comunitários para os seus cartazes. Por favor valide os pagamentos e marque-os em conformidade.</p>
+            
+            ${mySales.length > 0 ? `
+              <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-brand-dark/20 text-slate-450 uppercase font-bold text-[10px]">
+                      <th class="p-3">Cliente</th>
+                      <th class="p-3">Evento</th>
+                      <th class="p-3">Preço</th>
+                      <th class="p-3">Comissão (25%)</th>
+                      <th class="p-3">Estado</th>
+                      <th class="p-3 text-right">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${salesRows}
+                  </tbody>
+                </table>
+              </div>
+            ` : `
+              <div class="p-12 text-center text-slate-400 border border-dashed border-slate-200 dark:border-brand-carddark rounded-2xl">
+                <i data-lucide="users" class="w-8 h-8 text-slate-350 mx-auto mb-2"></i>
+                <p class="text-xs font-semibold">Sem recomendações registadas para os seus cartazes de momento.</p>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-brand-carddark/40 border border-slate-200 dark:border-brand-carddark/60 p-6 rounded-3xl">
-            <div>
-              <span class="text-xs font-bold text-brand-violet uppercase tracking-wider">Dashboard do Promotor Autorizado</span>
-              <h2 class="text-2xl font-bold font-display mt-0.5">Olá, ${state.currentUser?.nome}!</h2>
-              <p class="text-xs text-slate-400">Status da Conta: <span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 text-[10px] rounded-full font-bold uppercase border border-emerald-500/20">Aprovada Ativa</span></p>
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-[#150D3A]/20 border border-slate-205 dark:border-brand-carddark/60 p-6 rounded-3xl">
+            <div class="flex items-center gap-3.5">
+              <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-orange bg-brand-violet/5 flex-shrink-0">
+                <img src="${state.currentUser?.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-brand-orange uppercase tracking-wider">Painel do Promotor Credenciado</span>
+                <h2 class="text-xl font-bold font-display leading-tight">${state.currentUser?.nome || 'Promotor Oficial'}</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">Ficha de Angola: <span class="text-emerald-500 font-bold">@${state.currentUser?.telefone || ''}</span> | Licença ativa IP</p>
+              </div>
             </div>
             
-            <div class="flex gap-2">
-              <button onclick="setPromoterActiveTab('my-events')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'my-events' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Os Meus Eventos (${myEvents.length})</button>
-              <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'submit-form' ? 'bg-gradient-to-r from-brand-violet to-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Submeter Novo Cartaz</button>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="setPromoterActiveTab('my-profile')" class="px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase transition ${tabProfileClass}">Meu Perfil</button>
+              <button onclick="setPromoterActiveTab('my-events')" class="px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase transition ${tabEventsClass}">Os Meus Eventos (${myEvents.length})</button>
+              <button onclick="setPromoterActiveTab('submit-form')" class="px-3.5 py-2.5 rounded-xl text-[11px] font-bold uppercase transition ${tabSubmitClass}">Novo Cartaz</button>
+              <button onclick="setPromoterActiveTab('references')" class="px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase transition ${tabReferencesClass}">Recomendações</button>
             </div>
           </div>
 
-          ${state.promoterTab === 'my-events' ? `
-            <div class="space-y-4">
-              <h3 class="text-sm font-bold font-display uppercase tracking-wider">Histórico de Candidaturas & Eventos Enviados</h3>
-              
-              ${myEvents.length > 0 ? `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  ${myEvents.map(evt => {
-                    let badgeClass = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
-                    let label = "Pendente";
-                    if(evt.status === "aprovado") {
-                      badgeClass = "bg-emerald-505 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
-                      label = "Aprovado Oficial";
-                    } else if (evt.status === "rejeitado") {
-                      badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
-                      label = "Recusado / Erro de Comprovativo";
-                    }
-
-                    return `
-                      <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-[#120B2E]/50 flex gap-4 relative">
-                        <div class="w-20 h-24 rounded-lg bg-neutral-900 border overflow-hidden flex-shrink-0">
-                          <img src="${evt.flyer}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="flex-1 space-y-2">
-                          <h4 class="font-bold text-xs uppercase text-slate-800 dark:text-slate-100 leading-tight">${evt.nome}</h4>
-                          <p class="text-[10px] text-slate-400 capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
-                          <p class="text-xs font-bold text-brand-orange">${evt.preco}</p>
-                          
-                          <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeClass}">${label}</span>
-                            <span class="text-[9px] font-bold uppercase text-slate-400 px-1">${evt.plano}</span>
-                          </div>
-
-                          ${evt.status === "rejeitado" ? `
-                            <div class="p-2 bg-red-500/5 text-red-500 rounded text-[9px] font-semibold mt-1">
-                              <strong>Motivo:</strong> ${evt.rejeitarMotivo || 'Cartaz impróprio ou comprovativo não verificado.'}
-                            </div>
-                          ` : ''}
-                        </div>
-
-                        <!-- Actions bar -->
-                        <div class="absolute top-4 right-4 flex gap-1">
-                          <button onclick="triggerPromoterEventEdit('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-brand-orange transition" title="Editar"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                          <button onclick="triggerPromoterEventRemove('${evt.id}')" class="p-2 bg-slate-105 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-red-500 transition" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              ` : `
-                <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
-                  <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
-                  <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
-                </div>
-              `}
-            </div>
-          ` : `
-            <!-- SUBMIT EVENT SCREEN (PROMOTERS CADASTRO FLUXO COMPLETO) -->
-            <div class="bg-white dark:bg-[#120B2E]/60 border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 max-w-2xl mx-auto">
-              <h3 class="text-lg font-bold font-display uppercase text-brand-orange pb-3 border-b border-slate-205 dark:border-brand-carddark/50 mb-5">Submissão Oficial de Cartazes</h3>
-              
-              <form onsubmit="dispatchNewEvent(event)" class="space-y-4 text-xs">
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Título do Evento *</label>
-                  <input type="text" id="form-evt-nome" placeholder="Ex: Mega Show Reencontro" class="w-full text-slate-800 dark:text-white p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs focus:ring-1 focus:ring-brand-violet outline-none" required>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Província *</label>
-                    <select id="form-evt-provincia" onchange="cascadeFormMunicipios(this.value)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-xs outline-none">
-                      ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}">${p}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Município *</label>
-                    <select id="form-evt-municipio" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 outline-none">
-                      <!-- Cascade Loaded dynamically -->
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Data *</label>
-                    <input type="date" id="form-evt-data" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Hora *</label>
-                    <input type="time" id="form-evt-hora" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Categoria *</label>
-                    <select id="form-evt-categoria" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700">
-                      ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Preço Normal (Kz ou escreva: Gratuito) *</label>
-                    <input type="text" id="form-evt-preco" placeholder="Ex: 5.000 Kz" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Local Físico / Sala *</label>
-                  <input type="text" id="form-evt-local" placeholder="Ex: Multiusos da Kilamba, Sala A" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Link do Cartaz (URL da imagem do flyer / flyer.png) *</label>
-                  <input type="url" id="form-evt-flyer" placeholder="https://exemplo.com/flyer.jpg" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs">
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Descrição Detalhada do Evento *</label>
-                  <textarea id="form-evt-desc" rows="4" placeholder="Indique as atrações principais, políticas de entrada, contactos de cartões..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required></textarea>
-                </div>
-
-                <!-- Plano Escolha -->
-                <div class="p-4 rounded-2xl bg-brand-violet/5 border border-brand-violet/20 space-y-3">
-                  <label class="block font-bold text-sm tracking-wide text-brand-violet">Escolha o seu Plano de Divulgação</label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-slate-200 dark:border-brand-carddark rounded-xl flex items-start gap-2 cursor-pointer">
-                      <input type="radio" name="form-evt-plano" value="Base" class="mt-1" checked onchange="toggleReceiptViewForPlano('Base')">
-                      <div>
-                        <span class="block font-bold text-xs uppercase text-slate-700 dark:text-white">DIVULGAÇÃO BASE</span>
-                        <span class="block text-[10px] text-slate-400 mt-0.5">Surgimento livre no catálogo geral filtrado por província.</span>
-                        <span class="block text-xs font-bold text-brand-orange mt-2">Gratuito</span>
-                      </div>
-                    </label>
-                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-brand-orange rounded-xl flex items-start gap-2 cursor-pointer">
-                      <input type="radio" name="form-evt-plano" value="Premium" class="mt-1" onchange="toggleReceiptViewForPlano('Premium')">
-                      <div>
-                        <span class="block font-bold text-xs uppercase text-brand-orange">DIVULGAÇÃO PREMIUM</span>
-                        <span class="block text-[10px] text-slate-400 mt-0.5">Topo prioritário, slide horizontais de elite, popup automático repetitivo.</span>
-                        <span class="block text-xs font-bold text-brand-violet mt-2">Consultar taxa WhatsApp</span>
-                      </div>
-                    </label>
-                  </div>
-
-                  <!-- Comprovativo block -->
-                  <div id="comprovativo-wrapper" class="hidden space-y-1.5 pt-2">
-                    <label class="block font-bold text-brand-orange">Insira a URL do Comprovativo de Pagamento ou Referência *</label>
-                    <input type="text" id="form-evt-comprovativo" placeholder="URL do ficheiro enviado, imagem ou referência do depósito" class="w-full p-3 rounded-xl bg-white dark:bg-[#120B2E] text-xs font-semibold border border-brand-orange outline-none">
-                  </div>
-                </div>
-
-                <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-brand-violet/20">
-                  <i data-lucide="check-circle-2"></i> Submeter para José Sorte & Josué Bocoto
-                </button>
-              </form>
-            </div>
-          `}
+          <div id="tab-holder-content">
+            ${tabContent}
+          </div>
         </div>
       `;
 
       // Default cascade trigger on promoter form
-      if(state.promoterTab === 'submit-form') {
+      if (state.promoterTab === 'submit-form') {
         cascadeFormMunicipios(Object.keys(PROVINCIAS_ANGOLA)[0]);
       }
+      lucide.createIcons();
     }
 
     // Dynamic cascade select filler
@@ -1786,11 +2366,733 @@
 
       if(plano === "Premium") {
         wr.classList.remove("hidden");
-        document.getElementById("form-evt-comprovativo").setAttribute("required", "true");
+        document.getElementById("form-evt-file-comprovativo").setAttribute("required", "true");
       } else {
         wr.classList.add("hidden");
-        document.getElementById("form-evt-comprovativo").removeAttribute("required");
+        document.getElementById("form-evt-file-comprovativo").removeAttribute("required");
       }
+    };
+
+    window.adminPreviewComprovativo = function(dataUrl) {
+      if (!dataUrl) return;
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-brand-carddark">
+            <h3 class="text-sm font-bold uppercase text-brand-orange flex items-center gap-1.5 font-display">
+              <i data-lucide="file-check"></i> Comprovativo de Transação
+            </h3>
+          </div>
+          <div class="max-h-[70vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-brand-carddark flex justify-center bg-slate-900/40 p-2">
+            ${dataUrl.startsWith("data:application/pdf") ? `
+              <embed src="${dataUrl}" type="application/pdf" class="w-full h-[55vh]" />
+            ` : `
+              <img src="${dataUrl}" class="max-w-full h-auto mx-auto object-contain rounded-lg" style="max-height: 55vh;" />
+            `}
+          </div>
+          <div class="flex justify-between gap-2 pt-2">
+            <span class="text-[9px] text-slate-400 font-medium">Validado por José Sorte Francisco & Josué Bocoto</span>
+            <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold uppercase text-[10px]">Fechar</button>
+          </div>
+        </div>
+      `);
+    };
+
+    // =========================================================================
+    // MEMBERS COMMUNITY DASHBOARD & CHAT ("ÁREA DE MEMBROS NORMAIS")
+    // =========================================================================
+    function renderMemberDashboard(container) {
+       if(!state.currentUser) {
+          showToast("Acesso Restrito. Por favor, faça login.", "error");
+          navigateTo("home");
+          return;
+       }
+       const user = state.currentUser;
+       const premiumEvents = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+       
+       // Calculate user referral statistics
+       const myRefSales = state.sales.filter(s => s.referrerId === user.telefone);
+       const totalPending = myRefSales.filter(s => s.status === 'Pendente').length;
+       const totalConfirmed = myRefSales.filter(s => s.status === 'Confirmada').length;
+       const totalPaid = myRefSales.filter(s => s.status === 'Paga').length;
+       const totalCommissionsEarned = myRefSales.reduce((acc, s) => acc + s.commissionValue, 0).toLocaleString() + " Kz";
+
+       const referralLink = window.location.origin + "?ref=" + user.telefone;
+
+       container.innerHTML = `
+         <div class="space-y-6 animate-fade-in">
+           <!-- Top Banner Panel -->
+           <div class="bg-gradient-to-r from-[#120B2E] via-[#211451] to-slate-900 text-white p-6 rounded-3xl border border-brand-violet/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
+             <div class="flex items-center gap-4">
+               <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-orange bg-brand-violet/10 flex-shrink-0">
+                 <img src="${user.logoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+               </div>
+               <div>
+                 <span class="inline-flex gap-1 items-center text-[9px] bg-brand-violet/30 text-brand-orange px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-brand-orange/20 mb-1">
+                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online • Comunidade AngoFest
+                 </span>
+                 <h2 class="text-xl font-bold font-display leading-tight">Bem-vindo à comunidade AngoFest, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">${user.nome}</span></h2>
+                 <p class="text-[10px] text-slate-400">Interesses: ${user.interesses && user.interesses.length > 0 ? user.interesses.join(', ') : 'Música, Eventos'}</p>
+               </div>
+             </div>
+             
+             <!-- Tab Select toggler -->
+             <div class="flex flex-wrap gap-1.5 bg-black/40 p-1 rounded-xl">
+               <button onclick="window.setMemberViewTab('chat-feed')" id="m-tab-chat-feed" class="px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition bg-brand-violet text-white">Comunidade AngoFest</button>
+               <button onclick="window.setMemberViewTab('my-activity')" id="m-tab-my-activity" class="px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition text-slate-400 hover:text-white">Minha Atividade</button>
+               <button onclick="window.setMemberViewTab('online-members')" id="m-tab-online-members" class="px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition text-slate-400 hover:text-white md:hidden">Online</button>
+             </div>
+           </div>
+
+           <!-- Multi column main layout -->
+           <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+             <!-- LEFT COL: Profile Card & Referral Invite -->
+             <div class="lg:col-span-1 space-y-6">
+               <div class="p-5 bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-2xl shadow">
+                 <h3 class="text-xs font-bold font-display uppercase tracking-wider text-brand-violet mb-3 flex items-center gap-1.5"><i data-lucide="award" class="w-4 h-4 text-brand-orange"></i> Embaixador</h3>
+                 <div class="space-y-4 text-xs">
+                   <div class="p-3 bg-slate-50 dark:bg-brand-dark/30 rounded-xl space-y-2 text-left">
+                     <span class="text-[10px] text-slate-450 font-bold block">O MEU LINK DE CONVITE</span>
+                     <div class="flex items-center gap-1">
+                       <input type="text" readonly id="ref-link-input" value="${referralLink}" class="w-full p-2 bg-white dark:bg-brand-carddark border border-slate-200 dark:border-slate-800 rounded text-[9px] font-mono outline-none truncate">
+                       <button onclick="window.copyReferralLink()" class="p-2 bg-brand-orange hover:bg-brand-orange/90 text-white rounded transition" title="Copiar Link"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                     </div>
+                     <span class="text-[9px] text-slate-400 leading-normal block">Partilhe este link! Todas as compras registadas darão 25% de comissão direta no seu cartão.</span>
+                   </div>
+                   
+                   <div class="grid grid-cols-3 gap-2 text-center">
+                     <div class="p-2 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
+                       <span class="block text-[14px] font-bold text-yellow-500 font-display">${totalPending}</span>
+                       <span class="block text-[8px] text-slate-400">Pendente</span>
+                     </div>
+                     <div class="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                       <span class="block text-[14px] font-bold text-emerald-500 font-display">${totalConfirmed}</span>
+                       <span class="block text-[8px] text-slate-400">Confirmadas</span>
+                     </div>
+                     <div class="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                       <span class="block text-[14px] font-bold text-brand-violet font-display">${totalPaid}</span>
+                       <span class="block text-[8px] text-slate-400">Pagas</span>
+                     </div>
+                   </div>
+                   
+                   <div class="pt-3 border-t border-slate-100 dark:border-brand-carddark/50 flex justify-between items-center text-[11px]">
+                     <span class="font-bold text-slate-400">Total Acumulado:</span>
+                     <span class="font-bold text-brand-orange font-display text-sm">${totalCommissionsEarned}</span>
+                   </div>
+                 </div>
+               </div>
+               
+               <div class="p-5 bg-gradient-to-br from-brand-violet/5 to-brand-orange/5 border border-brand-violet/10 rounded-2xl text-xs space-y-2 text-left">
+                  <h4 class="font-bold text-brand-orange text-[10px] uppercase">Como Funciona a Distribuição?</h4>
+                  <p class="text-[10px] text-slate-450 leading-relaxed">
+                     1. Partilhe o link de convite.<br>
+                     2. O convidado clica e compra via WhatsApp do promotor.<br>
+                     3. O promotor valida a transição, libertando o saldo imediato.
+                  </p>
+               </div>
+             </div>
+
+             <!-- MIDDLE COL: Chat or referalls list -->
+             <div class="lg:col-span-2 space-y-6" id="member-dashboard-center-wrapper">
+                <!-- Loaded dynamically -->
+             </div>
+
+             <!-- RIGHT COL: Online participants -->
+             <div class="lg:col-span-1 hidden md:block" id="member-dashboard-right-wrapper">
+                <!-- Loaded dynamically -->
+             </div>
+           </div>
+         </div>
+       `;
+
+       if(!state.memberTab) state.memberTab = 'chat-feed';
+       window.setMemberViewTab(state.memberTab);
+       lucide.createIcons();
+    }
+
+    window.setMemberViewTab = function(tab) {
+      state.memberTab = tab;
+      
+      const btFeed = document.getElementById("m-tab-chat-feed");
+      const btAct = document.getElementById("m-tab-my-activity");
+      const btOnline = document.getElementById("m-tab-online-members");
+      
+      if(btFeed) {
+         btFeed.className = tab === 'chat-feed' ? "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition bg-brand-violet text-white" : "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition text-slate-400 hover:text-white";
+      }
+      if(btAct) {
+         btAct.className = tab === 'my-activity' ? "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition bg-brand-violet text-white" : "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition text-slate-400 hover:text-white";
+      }
+      if(btOnline) {
+         btOnline.className = tab === 'online-members' ? "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition bg-brand-violet text-white" : "px-3.5 py-2 rounded-lg text-[10px] font-bold uppercase transition text-slate-400 hover:text-white";
+      }
+
+      const centerContainer = document.getElementById("member-dashboard-center-wrapper");
+      const rightContainer = document.getElementById("member-dashboard-right-wrapper");
+
+      if (tab === 'chat-feed') {
+         renderChatFeedTab(centerContainer);
+         renderOnlineUsersPanel(rightContainer);
+      } else if (tab === 'my-activity') {
+         renderMyActivityTab(centerContainer);
+         if(rightContainer) {
+            rightContainer.innerHTML = `
+              <div class="p-5 bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark rounded-2xl text-xs space-y-3 shadow">
+                <h3 class="text-xs font-bold font-display uppercase tracking-wider text-brand-orange flex items-center gap-1.5"><i data-lucide="shield-check"></i> Monitorização</h3>
+                <p class="text-[10px] text-slate-505 leading-normal text-left">Todas as vossas comissões acumuladas de indicação são monitorizadas electronicamente pelos fundadores José Sorte Francisco e Josué Bocoto para máxima integridade e confiança social.</p>
+              </div>
+            `;
+         }
+      } else if (tab === 'online-members') {
+         renderOnlineUsersPanel(centerContainer);
+      }
+      lucide.createIcons();
+    };
+
+    function renderChatFeedTab(container) {
+       if(!container) return;
+       const premiumEvents = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+       
+       container.innerHTML = `
+         <!-- PREMIUM CAROUSEL HEADER -->
+         ${premiumEvents.length > 0 ? `
+           <div class="relative bg-gradient-to-r from-brand-violet to-[#3c1053] rounded-2xl overflow-hidden p-4 text-white border border-brand-orange/30 shadow-md min-h-[140px] flex flex-col justify-between">
+              <span class="absolute top-2 right-2 bg-brand-orange text-white text-[8px] font-bold py-0.5 px-1.5 rounded-full uppercase tracking-widest flex items-center gap-1">
+                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> Premium Chat Destaque
+              </span>
+              
+              <div id="chat-carousel-content" class="transition-all duration-550 mt-2">
+                 <!-- Loaded dynamically -->
+              </div>
+              
+              <!-- Indicator dots -->
+              <div class="flex gap-1.5 justify-center mt-3">
+                 ${premiumEvents.map((_, idx) => `<span id="carousel-dot-${idx}" class="w-2 h-2 rounded-full transition-all duration-300 ${idx === state.activeSlideIndex ? 'bg-brand-orange w-4' : 'bg-white/40'}"></span>`).join('')}
+              </div>
+           </div>
+         ` : ''}
+
+         <!-- GROUP MESSAGES BOARD -->
+         <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-2xl overflow-hidden flex flex-col h-[520px] shadow relative text-left">
+            <div id="chat-feed-box" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[440px] custom-scrollbar">
+                <!-- Content handled dynamically -->
+            </div>
+            
+            <!-- RICH MEDIA CONTROLS BAR -->
+            <div class="bg-slate-50 dark:bg-[#0c0620] border-t border-slate-200 dark:border-brand-carddark/70 p-3 space-y-2">
+               <div id="chat-selected-preview" class="hidden flex items-center justify-between p-2 rounded bg-brand-violet/10 border border-brand-violet/20 text-[10px]">
+                  <span id="chat-preview-text" class="truncate max-w-[200px] font-semibold text-brand-violet">Nenhum</span>
+                  <button onclick="window.clearChatSelection()" class="text-slate-400 hover:text-red-500 font-bold">✕</button>
+               </div>
+
+               <div class="flex items-center gap-2 relative">
+                  <button onclick="document.getElementById('chat-file-input').click()" class="p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-white dark:bg-brand-carddark hover:text-brand-orange hover:border-brand-orange/40 transition-colors" title="Anexar Imagem, Vídeo ou Ficheiro (Direto)">
+                     <i data-lucide="paperclip" class="w-4 h-4"></i>
+                  </button>
+                  <input type="file" id="chat-file-input" onchange="window.handleChatAttachmentSelect(event)" class="hidden">
+
+                  <button id="chat-recording-btn" onclick="window.toggleAudioRecording()" class="p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-white dark:bg-brand-carddark hover:text-red-500 hover:border-red-500/40 transition-colors">
+                     <i data-lucide="mic" class="w-4 h-4"></i>
+                  </button>
+
+                  <input type="text" id="comm-chat-text" onkeydown="if(event.key==='Enter') window.dispatchGroupMessage()" placeholder="Escreva uma mensagem comunitária..." class="flex-1 text-xs text-slate-800 dark:text-white bg-white dark:bg-brand-carddark p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] outline-none focus:ring-1 focus:ring-brand-violet">
+
+                  <button onclick="window.toggleEmojiDropdown()" class="p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-white dark:bg-brand-carddark hover:text-brand-orange transition-colors" title="Emoji">
+                     <i data-lucide="smile" class="w-4 h-4"></i>
+                  </button>
+
+                  <button onclick="window.dispatchGroupMessage()" class="p-3 bg-gradient-to-r from-brand-violet to-brand-orange text-white rounded-xl hover:scale-102 transition shadow-md">
+                     <i data-lucide="send" class="w-4 h-4"></i>
+                  </button>
+               </div>
+
+               <!-- Emoji fast floating menu -->
+               <div id="emoji-popup-box" class="hidden absolute bottom-16 right-4 p-3 bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark rounded-xl shadow-2xl flex flex-wrap gap-2 max-w-[200px] z-50">
+                  ${["😀", "🔥", "🙌", "🍻", "🎉", "😱", "👍", "❤️", "😜", "🕶️"].map(emo => `
+                     <button onclick="window.insertEmojiToInput('${emo}')" class="text-base hover:scale-125 transition">${emo}</button>
+                  `).join('')}
+               </div>
+            </div>
+         </div>
+       `;
+
+       renderChatMessagesFeed();
+       startCarouselCycle();
+    }
+
+    window.toggleEmojiDropdown = function() {
+      const box = document.getElementById("emoji-popup-box");
+      if(box) box.classList.toggle("hidden");
+    };
+
+    window.insertEmojiToInput = function(emoji) {
+      const input = document.getElementById("comm-chat-text");
+      if(input) {
+         input.value += emoji;
+         input.focus();
+      }
+      window.toggleEmojiDropdown();
+    };
+
+    window.chatSelectedAttachment = null;
+
+    window.handleChatAttachmentSelect = async function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      const submitBtn = document.getElementById("chat-recording-btn");
+      if(submitBtn) {
+         submitBtn.innerHTML = "⏳";
+      }
+
+      let detectedType = "file";
+      if(file.type.startsWith("image/")) detectedType = "image";
+      else if(file.type.startsWith("video/")) detectedType = "video";
+      else if(file.type.startsWith("audio/")) detectedType = "audio";
+
+      try {
+         const dataUrl = await window.uploadToStorageOrBase64(file, "community/chats");
+         window.chatSelectedAttachment = {
+            url: dataUrl,
+            type: detectedType,
+            name: file.name
+         };
+         
+         const preview = document.getElementById("chat-selected-preview");
+         const txt = document.getElementById("chat-preview-text");
+         if(preview && txt) {
+            txt.innerText = `${file.name} (${detectedType})`;
+            preview.classList.remove("hidden");
+         }
+         
+         showToast(`Ficheiro ${file.name} anexado com sucesso!`, "success");
+      } catch(err) {
+         console.error(err);
+         showToast("Erro no processamento do anexo.", "error");
+      } finally {
+         if(submitBtn) {
+            submitBtn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+         }
+      }
+    };
+
+    window.clearChatSelection = function() {
+       window.chatSelectedAttachment = null;
+       const preview = document.getElementById("chat-selected-preview");
+       if(preview) preview.classList.add("hidden");
+    };
+
+    function renderChatMessagesFeed() {
+       const box = document.getElementById("chat-feed-box");
+       if(!box) return;
+
+       const msgs = state.messages || [];
+       if(msgs.length === 0) {
+          box.innerHTML = `
+            <div class="p-8 text-center text-slate-400 text-xs mt-12">
+               <i data-lucide="message-square" class="w-8 h-8 text-slate-300 mx-auto mb-2"></i>
+               <p>Não há mensagens de momento no chat.</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+       }
+
+       box.innerHTML = msgs.map(m => {
+          const isMyMsg = m.sender === state.currentUser?.telefone;
+          const bubbleColor = isMyMsg 
+            ? "bg-brand-violet text-white rounded-br-none" 
+            : "bg-slate-100 dark:bg-[#1D153A] text-slate-800 dark:text-slate-150 rounded-bl-none";
+          
+          let mediaSection = "";
+          if(m.mediaUrl) {
+             if(m.mediaType === "image") {
+                mediaSection = `<div class="mt-2 text-center select-none"><img src="${m.mediaUrl}" class="max-w-full max-h-48 rounded-xl cursor-zoom-in border border-white/10" onclick="window.adminPreviewComprovativo('${m.mediaUrl}')" /></div>`;
+             } else if(m.mediaType === "video") {
+                mediaSection = `<div class="mt-2"><video src="${m.mediaUrl}" controls class="max-w-full max-h-48 rounded-xl object-contain"></video></div>`;
+             } else if(m.mediaType === "audio") {
+                mediaSection = `<div class="mt-2 text-slate-800 dark:text-white"><audio src="${m.mediaUrl}" controls class="w-full max-w-xs"></audio></div>`;
+             } else {
+                mediaSection = `
+                  <div class="mt-2 bg-black/10 dark:bg-black/30 p-2 rounded-xl flex items-center justify-between gap-3 text-[10px]">
+                     <span class="truncate font-semibold max-w-[150px]"><i data-lucide="file-text" class="w-3.5 h-3.5 inline"></i> ${m.mediaName || "ficheiro"}</span>
+                     <a href="${m.mediaUrl}" download="${m.mediaName || 'ficheiro'}" target="_blank" class="px-2.5 py-1 bg-brand-orange text-white font-bold rounded text-[8px] uppercase">Download</a>
+                  </div>
+                `;
+             }
+          }
+
+          return `
+            <div class="flex gap-2.5 items-start ${isMyMsg ? 'flex-row-reverse text-right' : ''} animate-fade-in text-xs">
+               <div class="w-8 h-8 rounded-full overflow-hidden border border-brand-orange bg-slate-800 flex-shrink-0">
+                  <img src="${m.senderPhoto || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+               </div>
+               
+               <div class="space-y-1 max-w-[75%] md:max-w-[70%]">
+                  <div class="flex items-center gap-1.5 ${isMyMsg ? 'justify-end' : ''}">
+                     <span class="font-bold text-[10px] text-slate-800 dark:text-slate-250">${m.senderName}</span>
+                     <span class="text-[8px] text-slate-400">${m.dateStr || 'há bocado'}</span>
+                  </div>
+                  
+                  <div class="p-3 rounded-2xl ${bubbleColor} leading-relaxed text-left relative group">
+                     ${m.text ? `<p class="whitespace-pre-line text-xs leading-normal">${m.text}</p>` : ''}
+                     ${mediaSection}
+                     
+                     ${isMyMsg ? `
+                       <button onclick="window.deleteGroupMessage('${m.id}')" class="absolute -left-6 bottom-2 p-1 text-slate-400 hover:text-red-500 rounded transition md:opacity-0 md:group-hover:opacity-100" title="Apagar Mensagem">
+                          ✕
+                       </button>
+                     ` : ''}
+                  </div>
+               </div>
+            </div>
+          `;
+       }).join('');
+
+       lucide.createIcons();
+       setTimeout(() => {
+          box.scrollTop = box.scrollHeight;
+       }, 80);
+    }
+
+    function renderOnlineUsersPanel(container) {
+       if(!container) return;
+       let list = state.onlineUsers || [];
+       if(list.length === 0) {
+          list = state.users.slice(0, 3).map(u => ({
+             telefone: u.telefone,
+             nome: u.nome,
+             foto: u.logoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"
+          }));
+       }
+
+       container.innerHTML = `
+          <div class="p-5 bg-white dark:bg-brand-carddark/80 border border-slate-200 dark:border-brand-carddark rounded-2xl shadow space-y-4 text-left">
+             <div class="flex items-center justify-between border-b border-lightbg dark:border-brand-carddark/50 pb-2">
+                <h3 class="text-xs font-bold font-display uppercase tracking-wider text-brand-orange flex items-center gap-1.5">
+                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Membros Online (${list.length})
+                </h3>
+             </div>
+             
+             <div class="space-y-3 max-h-[360px] overflow-y-auto custom-scrollbar">
+                ${list.map(u => `
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                     <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-7 h-7 rounded-full overflow-hidden border border-slate-200 bg-slate-800 flex-shrink-0 relative">
+                           <img src="${u.foto || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+                           <span class="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white dark:border-brand-carddark"></span>
+                        </div>
+                        <span class="font-semibold text-slate-751 dark:text-slate-200 truncate">${u.nome}</span>
+                     </div>
+                  </div>
+                `).join('')}
+             </div>
+          </div>
+       `;
+       lucide.createIcons();
+    }
+
+    function renderMyActivityTab(container) {
+       if(!container) return;
+       const user = state.currentUser;
+       const mySales = state.sales.filter(s => s.referrerId === user.telefone);
+
+       container.innerHTML = `
+         <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark rounded-2xl p-5 shadow space-y-4 text-left">
+            <h3 class="text-xs font-bold font-display uppercase text-brand-violet pb-2 border-b border-lightbg dark:border-slate-800">Atividade de Convites e Comissões</h3>
+            
+            ${mySales.length > 0 ? `
+              <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                 <table class="w-full text-left border-collapse text-[11px]">
+                    <thead>
+                       <tr class="bg-slate-50 dark:bg-brand-dark/20 text-slate-400 font-bold uppercase tracking-wider">
+                          <th class="p-2.5 text-[9px]">Comprador</th>
+                          <th class="p-2.5 text-[9px]">Evento</th>
+                          <th class="p-2.5 text-[9px]">Preço</th>
+                          <th class="p-2.5 text-[9px] text-right">Comissão (25%)</th>
+                          <th class="p-2.5 text-[9px] text-right">Status</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                       ${mySales.map(s => {
+                          let badgeStyle = "bg-yellow-500/10 text-yellow-550 border border-yellow-500/20";
+                          if(s.status === "Confirmada") badgeStyle = "bg-emerald-500/10 text-emerald-554 border border-emerald-500/20";
+                          else if(s.status === "Paga") badgeStyle = "bg-purple-500/10 text-brand-violet border border-brand-violet/20";
+                          
+                          return `
+                             <tr class="border-b border-slate-200 dark:border-brand-carddark hover:bg-slate-50/50 dark:hover:bg-brand-dark/10">
+                                <td class="p-2.5 font-bold text-slate-800 dark:text-white">${s.clientName}</td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400 truncate max-w-[120px]">${s.eventName}</td>
+                                <td class="p-2.5 text-slate-450">${s.price}</td>
+                                <td class="p-2.5 text-right font-bold text-brand-orange">${s.commissionValue.toLocaleString()} Kz</td>
+                                <td class="p-2.5 text-right"><span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase inline-block ${badgeStyle}">${s.status}</span></td>
+                             </tr>
+                          `;
+                       }).join('')}
+                    </tbody>
+                 </table>
+              </div>
+            ` : `
+              <div class="p-12 text-center text-slate-400">
+                 <i data-lucide="frown" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                 <p class="text-xs font-semibold">Sem comissões registadas.</p>
+                 <p class="text-[10px] text-slate-400 mt-1">Partilhe o seu link com os seus círculos secundários e amigos para ativar comissões!</p>
+              </div>
+            `}
+         </div>
+       `;
+       lucide.createIcons();
+    }
+
+    let carouselInterval = null;
+    function startCarouselCycle() {
+       if(carouselInterval) clearInterval(carouselInterval);
+       renderCarouselSlide();
+       
+       carouselInterval = setInterval(() => {
+          const premium = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+          if(premium.length === 0) return;
+          state.activeSlideIndex = (state.activeSlideIndex + 1) % premium.length;
+          renderCarouselSlide();
+       }, 60000);
+    }
+
+    function renderCarouselSlide() {
+       const container = document.getElementById("chat-carousel-content");
+       if(!container) return;
+
+       const premium = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+       if(premium.length === 0) {
+          container.innerHTML = `<span class="text-xs text-white/60">Sem eventos Premium em destaque.</span>`;
+          return;
+       }
+
+       const evt = premium[state.activeSlideIndex];
+       if(!evt) return;
+
+       container.innerHTML = `
+         <div class="flex gap-4 items-center animate-fade-in text-xs text-left">
+            <div class="w-14 h-14 rounded-xl overflow-hidden border border-white/20 flex-shrink-0 bg-neutral-900 shadow">
+               <img src="${evt.flyer}" class="w-full h-full object-cover">
+            </div>
+            
+            <div class="flex-grow min-w-0">
+               <h4 class="font-bold text-xs tracking-tight text-white leading-snug uppercase truncate">${evt.nome}</h4>
+               <p class="text-[10px] text-slate-200 line-clamp-1 truncate">${evt.descricao}</p>
+               
+               <div class="flex items-center gap-2 pt-1 text-[9px]">
+                  <span class="text-brand-orange font-bold font-display">${evt.preco}</span>
+                  <span class="text-slate-350 truncate">📍 ${evt.provincia} • ${evt.municipio}</span>
+               </div>
+            </div>
+            
+            <div class="flex flex-col gap-1 flex-shrink-0">
+               <button onclick="window.initiatePurchaseWithReferral('${evt.id}')" class="px-2.5 py-1.5 bg-brand-orange text-white hover:bg-white hover:text-brand-orange font-bold text-[9px] uppercase rounded-lg transition-all flex items-center gap-1 shadow"><i data-lucide="ticket" class="w-3 h-3"></i> Reservar</button>
+            </div>
+         </div>
+       `;
+
+       premium.forEach((_, idx) => {
+          const dot = document.getElementById(`carousel-dot-${idx}`);
+          if(dot) {
+             if(idx === state.activeSlideIndex) {
+                dot.className = "w-4 h-2 rounded-full transition-all duration-300 bg-brand-orange";
+             } else {
+                dot.className = "w-2 h-2 rounded-full transition-all duration-300 bg-white/40";
+             }
+          }
+       });
+
+       lucide.createIcons();
+    }
+
+    window.copyReferralLink = function() {
+       const el = document.getElementById("ref-link-input");
+       if(el) {
+          el.select();
+          document.execCommand("copy");
+          showToast("O seu link único foi copiado de forma 100% segura para o clipboard!", "success");
+       }
+    };
+
+    window.deleteGroupMessage = function(msgId) {
+       const matched = state.messages.findIndex(m => m.id === msgId);
+       if(matched === -1) return;
+       
+       if(state.messages[matched].sender !== state.currentUser?.telefone) {
+          showToast("Não pode apagar mensagens de outros membros.", "error");
+          return;
+       }
+
+       state.messages.splice(matched, 1);
+       localStorage.setItem("af_messages", JSON.stringify(state.messages));
+       
+       if(fbActive && db) {
+          deleteDoc(doc(db, "messages", msgId)).catch(err => console.error("Erro ao apagar no Firebase:", err));
+       }
+       showToast("Mensagem omitida.", "success");
+       renderChatMessagesFeed();
+    };
+
+    window.dispatchGroupMessage = async function() {
+       const input = document.getElementById("comm-chat-text");
+       if(!input) return;
+
+       const val = input.value.trim();
+       const attach = window.chatSelectedAttachment;
+
+       if(!val && !attach) {
+          showToast("Escreva algo ou anexe um ficheiro para enviar.", "error");
+          return;
+       }
+
+       const msgId = "msg-" + Date.now();
+       const newMsg = {
+          id: msgId,
+          sender: state.currentUser?.telefone || "900000000",
+          senderName: state.currentUser?.nome || "Membro Colaborador",
+          senderPhoto: state.currentUser?.logoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+          text: val,
+          mediaUrl: attach ? attach.url : "",
+          mediaType: attach ? attach.type : "none",
+          mediaName: attach ? attach.name : "",
+          timestamp: Date.now(),
+          dateStr: new Date().toLocaleTimeString("pt-PT", {hour: '2-digit', minute: '2-digit'})
+       };
+
+       state.messages.push(newMsg);
+       localStorage.setItem("af_messages", JSON.stringify(state.messages));
+       input.value = "";
+       window.clearChatSelection();
+
+       if(fbActive && db) {
+          setDoc(doc(db, "messages", msgId), newMsg).catch(err => console.error("Erro ao transmitir mensagem:", err));
+       }
+       renderChatMessagesFeed();
+    };
+
+    // Recording audio logic
+    let isRecordingAudio = false;
+    let audioMediaRecorder = null;
+    let audioChunks = [];
+
+    window.toggleAudioRecording = async function() {
+       const btn = document.getElementById("chat-recording-btn");
+       if(!btn) return;
+
+       if(!isRecordingAudio) {
+          try {
+             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+             audioMediaRecorder = new MediaRecorder(stream);
+             audioChunks = [];
+
+             audioMediaRecorder.ondataavailable = e => {
+                if(e.data.size > 0) audioChunks.push(e.data);
+             };
+
+             audioMediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const file = new File([audioBlob], `audio_${Date.now()}.wav`, { type: 'audio/wav' });
+                
+                btn.innerHTML = `⏳`;
+                try {
+                   const url = await window.uploadToStorageOrBase64(file, "community/chats");
+                   window.chatSelectedAttachment = {
+                      url: url,
+                      type: "audio",
+                      name: "vocal_audio.wav"
+                   };
+                   const preview = document.getElementById("chat-selected-preview");
+                   const txt = document.getElementById("chat-preview-text");
+                   if(preview && txt) {
+                      txt.innerText = "Áudio gravado pronto a enviar";
+                      preview.classList.remove("hidden");
+                   }
+                   showToast("Áudio gravado com sucesso! Clique em enviar.", "success");
+                } catch(err) {
+                   console.error(err);
+                   showToast("Erro no processamento do ficheiro de áudio.", "error");
+                } finally {
+                   btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i>`;
+                   lucide.createIcons();
+                }
+             };
+
+             audioMediaRecorder.start();
+             isRecordingAudio = true;
+             btn.innerHTML = `🛑`;
+             btn.classList.add("bg-red-500", "text-white animate-pulse");
+             showToast("Gravando a sua mensagem de voz... Toque de novo no microfone para parar.");
+          } catch(err) {
+             console.error(err);
+             showToast("Erro de acesso ao microfone do seu dispositivo.", "error");
+          }
+       } else {
+          if(audioMediaRecorder) {
+             audioMediaRecorder.stop();
+          }
+          isRecordingAudio = false;
+          btn.classList.remove("bg-red-500", "text-white animate-pulse");
+          btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i>`;
+          lucide.createIcons();
+       }
+    };
+
+    window.initiatePurchaseWithReferral = async function(eventId) {
+       const evt = state.events.find(e => e.id === eventId);
+       if(!evt) return;
+
+       const referrerId = localStorage.getItem("af_referrer_id");
+       if(referrerId) {
+          const matchedReferrerObj = state.users.find(u => u.telefone === referrerId);
+          if (matchedReferrerObj) {
+             const purchaseId = "sale-auto-" + Date.now();
+             const priceClean = parseInt(evt.preco.replace(/\D/g, '')) || 25000;
+             const commissionVal = Math.round(priceClean * 0.25);
+             
+             const newSale = {
+                id: purchaseId,
+                referrerId: referrerId,
+                referrerName: matchedReferrerObj.nome,
+                eventId: eventId,
+                eventName: evt.nome,
+                promoterPhone: evt.promotorPhone || "924042125",
+                promoterName: evt.promotor,
+                clientName: state.currentUser ? state.currentUser.nome : "Convidado Anónimo",
+                price: evt.preco,
+                commissionRate: 25,
+                commissionValue: commissionVal,
+                status: "Pendente",
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString("pt-PT")
+             };
+
+             state.sales.push(newSale);
+             localStorage.setItem("af_sales", JSON.stringify(state.sales));
+             if(fbActive && db) {
+                await setDoc(doc(db, "sales", purchaseId), newSale).catch(err => console.error(err));
+             }
+             showToast(`Sua indicação de convite pelo embaixador ${matchedReferrerObj.nome} foi registada!`, "success");
+          }
+       }
+
+       const whatsappNum = evt.promotorPhone || "931352915";
+       const finalMsg = `Olá, vim através da indicação de um embaixador do AngoFest! Gostaria de comprar e reservar cartões para o festival ${evt.nome} de preço ${evt.preco}.`;
+       const url = `https://wa.me/244${whatsappNum}?text=${encodeURIComponent(finalMsg)}`;
+       window.open(url, '_blank');
+    };
+
+    window.confirmReferralSale = async function(saleId, newStatus) {
+       const matched = state.sales.find(s => s.id === saleId);
+       if(!matched) return;
+       
+       matched.status = newStatus;
+       localStorage.setItem("af_sales", JSON.stringify(state.sales));
+       if(fbActive && db) {
+          await setDoc(doc(db, "sales", saleId), matched).catch(err => console.error(err));
+       }
+       showToast(`Venda do cliente ${matched.clientName} actualizada para ${newStatus}!`, "success");
+       renderApp();
     };
 
     // 3. ADMIN DASHBOARD
@@ -1807,10 +3109,11 @@
               <h2 class="text-2xl font-bold font-display">José Sorte Francisco & Josué Bocoto</h2>
               <p class="text-xs text-slate-400">Ambiente Centralizado de Aprovação e Gestão de Contratos de Cartazes de Angola</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button onclick="setAdminActiveTab('approvals')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'approvals' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Novas Submissões (${submissions.length})</button>
               <button onclick="setAdminActiveTab('event-catalog')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'event-catalog' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Catálogo Ativo (${approvedList.length})</button>
               <button onclick="setAdminActiveTab('registered-users')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'registered-users' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Promotores / Clientes (${usersList.length})</button>
+              <button onclick="setAdminActiveTab('referrals-log')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'referrals-log' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Relatório de Embaixadores</button>
             </div>
           </div>
 
@@ -1840,7 +3143,24 @@
                           <p>📅 Horário: <strong class="text-slate-800 dark:text-white">${sub.data} às ${sub.hora}</strong></p>
                           <p>💵 Preço: <strong class="text-brand-orange">${sub.preco}</strong></p>
                           <p>👤 Contato Promotor: <strong>${sub.promotor} (${sub.promotorPhone})</strong></p>
-                          ${sub.plano === 'Premium' ? `<p class="col-span-2 text-brand-orange font-bold font-mono">🎫 Comprovativo: <a href="${sub.comprovativo}" target="_blank" class="hover:underline">${sub.comprovativo}</a></p>` : ''}
+                          ${sub.plano === 'Premium' ? `
+                            <div class="col-span-2 p-2.5 bg-brand-orange/5 border border-brand-orange/15 rounded-xl flex items-center justify-between gap-3 mt-1.5 w-full">
+                              <div class="flex items-center gap-2 min-w-0">
+                                <i data-lucide="receipt" class="w-4 h-4 text-brand-orange flex-shrink-0"></i>
+                                <div class="min-w-0">
+                                  <span class="block text-[8px] text-slate-400 font-bold uppercase tracking-wide">Comprovativo de Depósito</span>
+                                  <span class="block text-[10px] font-semibold text-slate-700 dark:text-white truncate">Premium Comprovativo</span>
+                                </div>
+                              </div>
+                              <div class="flex gap-1.5 flex-shrink-0">
+                                ${sub.comprovativo && (sub.comprovativo.startsWith('data:image') || sub.comprovativo.includes('events') || (!sub.comprovativo.endsWith('.pdf') && !sub.comprovativo.startsWith('data:application/pdf'))) ? `
+                                  <button type="button" onclick="window.adminPreviewComprovativo('${sub.comprovativo}')" class="px-2.5 py-1.5 bg-brand-orange text-white text-[9px] font-bold uppercase rounded-lg hover:bg-brand-orange/90 transition flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> Visualizar</button>
+                                ` : `
+                                  <a href="${sub.comprovativo}" target="_blank" class="px-2.5 py-1.5 bg-brand-violet text-white text-[9px] font-bold uppercase rounded-lg hover:bg-brand-violet/90 transition flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Baixar Anexo</a>
+                                `}
+                              </div>
+                            </div>
+                          ` : ''}
                         </div>
 
                         <!-- ACTIONS PANEL -->
@@ -1925,6 +3245,70 @@
                     </div>
                   </div>
                 `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ADMIN REFERRALS LOG -->
+          ${state.adminTab === 'referrals-log' ? `
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Total Indicações</span>
+                  <span class="text-xl font-bold font-display text-brand-orange">${state.sales.length} recomendações</span>
+                </div>
+                <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Transações Consolidadas</span>
+                  <span class="text-xl font-bold font-display text-emerald-500">${state.sales.filter(s => s.status !== "Pendente").length} vendas</span>
+                </div>
+                <div class="p-4 bg-white dark:bg-[#120B2E]/50 rounded-2xl border border-slate-200 dark:border-brand-carddark text-left">
+                  <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wide">Comissões Acumuladas</span>
+                  <span class="text-xl font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">
+                    ${state.sales.reduce((acc, s) => acc + s.commissionValue, 0).toLocaleString()} Kz
+                  </span>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 text-left">
+                <h3 class="text-xs font-bold font-display uppercase text-brand-violet pb-2 border-b border-slate-100 dark:border-slate-800 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="text-brand-orange w-4 h-4"></i> Extrato de Comissões e Embaixadores</h3>
+                
+                ${state.sales.length > 0 ? `
+                  <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr class="bg-slate-50 dark:bg-brand-dark/20 text-slate-450 uppercase font-bold text-[10px]">
+                          <th class="p-3">Embaixador</th>
+                          <th class="p-3">Cliente Comprador</th>
+                          <th class="p-3">Promotor Responsável</th>
+                          <th class="p-3">Evento</th>
+                          <th class="p-3 text-right">Comissão (25%)</th>
+                          <th class="p-3 text-right font-display">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${state.sales.map(s => `
+                          <tr class="border-b border-slate-200 dark:border-[#1F1942]/50 hover:bg-slate-50 dark:hover:bg-[#100D34]/25">
+                            <td class="p-3">
+                              <span class="font-bold text-slate-800 dark:text-white">${s.referrerName}</span>
+                              <span class="block text-[8px] text-slate-400 font-mono">ID-${s.referrerId}</span>
+                            </td>
+                            <td class="p-3 text-slate-700 dark:text-slate-300 font-semibold">${s.clientName}</td>
+                            <td class="p-3 text-slate-500 truncate max-w-[100px]">${s.promoterName}</td>
+                            <td class="p-3 font-semibold truncate max-w-[120px]">${s.eventName}</td>
+                            <td class="p-3 text-right text-brand-orange font-bold">${s.commissionValue.toLocaleString()} Kz</td>
+                            <td class="p-3 text-right">
+                              <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase ${s.status === 'Confirmada' ? 'bg-emerald-500/10 text-emerald-505 text-emerald-500' : s.status === 'Paga' ? 'bg-purple-500/10 text-brand-violet' : 'bg-yellow-500/10 text-yellow-500'}">${s.status}</span>
+                            </td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                ` : `
+                  <div class="p-12 text-center text-slate-400">
+                    <p class="text-xs font-semibold">Sem comissões de embaixadores registadas no sistema de momento.</p>
+                  </div>
+                `}
               </div>
             </div>
           ` : ''}
