@@ -270,34 +270,47 @@
     // Pode introduzir aqui as credenciais do seu projeto Firebase diretamente.
     // O portal ativa automaticamente canais e persistência Firebase se detetar configs.
     const firebaseConfig = {
-      apiKey: "", // Insira aqui a sua apiKey do Firebase Console
-      authDomain: "",
-      projectId: "",
-      storageBucket: "",
-      messagingSenderId: "",
-      appId: ""
+      apiKey: "AIzaSyCySFZRQy8Coy6cqkuqenwwEv29zWRAnJo",
+      authDomain: "angofest.firebaseapp.com",
+      projectId: "angofest",
+      storageBucket: "angofest.firebasestorage.app",
+      messagingSenderId: "523773787531",
+      appId: "1:523773787531:web:f67f3d8752597948b4038e",
+      measurementId: "G-8EY7H14116"
     };
 
     let fbActive = false;
     let fbApp = null;
-    let auth = null;
     let db = null;
-    let storage = null;
 
-    // Tentativa segura de inicialização dinâmica via CDNs do Firebase caso as credenciais estejam povoadas
-    if(firebaseConfig.projectId && firebaseConfig.apiKey !== "") {
-      try {
-        // Exemplo de importação dinâmica para manter index.html resiliente
-        // const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
-        // const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
-        // const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-        // fbApp = initializeApp(firebaseConfig);
-        // auth = getAuth(fbApp);
-        // db = getFirestore(fbApp);
-        // fbActive = true;
-        // console.log("Canal Firebase sincronizado!");
-      } catch(e) {
-        console.error("Falha ao inicializar o banco de dados Firebase.", e);
+    // Declarations for dynamically imported Firestore Functions
+    let doc, setDoc, getDoc, getDocs, onSnapshot, collection, addDoc, updateDoc, deleteDoc;
+
+    async function loadFirebase() {
+      // Tentativa segura de inicialização dinâmica via CDNs do Firebase caso as credenciais estejam povoadas
+      if(firebaseConfig.projectId && firebaseConfig.apiKey !== "") {
+        try {
+          const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+          const firestoreModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+          
+          doc = firestoreModule.doc;
+          setDoc = firestoreModule.setDoc;
+          getDoc = firestoreModule.getDoc;
+          getDocs = firestoreModule.getDocs;
+          onSnapshot = firestoreModule.onSnapshot;
+          collection = firestoreModule.collection;
+          addDoc = firestoreModule.addDoc;
+          updateDoc = firestoreModule.updateDoc;
+          deleteDoc = firestoreModule.deleteDoc;
+
+          fbApp = initializeApp(firebaseConfig);
+          db = firestoreModule.getFirestore(fbApp);
+          fbActive = true;
+          console.log("Canal Firebase sincronizado com sucesso!");
+          await initFirebaseSync();
+        } catch(e) {
+          console.error("Falha ao inicializar o banco de dados Firebase.", e);
+        }
       }
     }
 
@@ -453,6 +466,86 @@
       localStorage.setItem("af_current_user_v2", JSON.stringify(state.currentUser));
     }
 
+    async function initFirebaseSync() {
+      if(!fbActive) return;
+      try {
+        // Seeding database with original presets if empty
+        const usersCol = collection(db, "users");
+        const usersSnap = await getDocs(usersCol);
+        if(usersSnap.empty) {
+          for(const u of MOCK_USERS_BASE) {
+            await setDoc(doc(db, "users", u.telefone), u);
+          }
+        }
+
+        const eventsCol = collection(db, "events");
+        const eventsSnap = await getDocs(eventsCol);
+        if(eventsSnap.empty) {
+          for(const e of MOCK_EVENTS_BASE) {
+            await setDoc(doc(db, "events", e.id), e);
+          }
+        }
+
+        const chatsCol = collection(db, "chats");
+        const chatsSnap = await getDocs(chatsCol);
+        if(chatsSnap.empty) {
+          for(const c of MOCK_CHAT_BASE) {
+            const prepMsg = {...c, timestamp: Date.now() - 100000};
+            await addDoc(collection(db, "chats"), prepMsg);
+          }
+        }
+
+        // Live Real-Time Multi-User Listener Subscriptions
+        onSnapshot(usersCol, (snap) => {
+          const list = [];
+          snap.forEach(d => list.push(d.data()));
+          if(list.length > 0) {
+            state.users = list;
+            localStorage.setItem("af_users_v2", JSON.stringify(list));
+            if(state.currentUser) {
+              const matched = list.find(u => u.telefone === state.currentUser.telefone);
+              if(matched) {
+                state.currentUser = matched;
+                localStorage.setItem("af_current_user_v2", JSON.stringify(matched));
+              }
+            }
+            renderApp();
+          }
+        });
+
+        onSnapshot(eventsCol, (snap) => {
+          const list = [];
+          snap.forEach(d => list.push(d.data()));
+          if(list.length > 0) {
+            state.events = list;
+            localStorage.setItem("af_events_v2", JSON.stringify(list));
+            renderApp();
+          }
+        });
+
+        onSnapshot(chatsCol, (snap) => {
+          const list = [];
+          snap.forEach(d => list.push(d.data()));
+          if(list.length > 0) {
+            // Sort by timestamp so ordering remains perfect
+            list.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            state.chats = list;
+            localStorage.setItem("af_chats_v2", JSON.stringify(list));
+            const box = document.getElementById("chat-messages");
+            const frame = document.getElementById("chat-frame");
+            if(box && frame && !frame.classList.contains("hidden")) {
+              renderChatMessages();
+            }
+          }
+        });
+
+      } catch(err) {
+        console.error("Erro na sincronização automática do Firestore:", err);
+      }
+    }
+
+    loadFirebase();
+
     // =========================================================================
     // TOASTS CENTER
     // =========================================================================
@@ -600,26 +693,36 @@
         sender: userLabel,
         senderName: userName,
         text: text,
-        time: timeStr
+        time: timeStr,
+        timestamp: Date.now()
       };
 
       state.chats.push(newMsg);
       saveState();
+      if(fbActive) {
+        addDoc(collection(db, "chats"), newMsg).catch(err => console.error("Erro ao enviar mensagem:", err));
+      }
       txtInput.value = '';
       renderChatMessages();
 
       // Simulated auto technical developer reply
       if(state.currentUser?.role !== "admin") {
         setTimeout(() => {
-          state.chats.push({
+          const autoMsg = {
             sender: "Suporte",
             senderName: "Suporte Técnico",
             text: `Olá ${userName}! Recebemos a sua mensagem sobre a plataforma AngoFest. Entraremos em contacto para o seu número de registo (${userLabel}) brevemente. Pode também contactar diretamente os desenvolvedores José Sorte e Josué Bocoto pelos números da plataforma.`,
-            time: now.getHours() + ":" + (now.getMinutes() + 1).toString().padStart(2, '0')
-          });
+            time: now.getHours() + ":" + (now.getMinutes() + 1).toString().padStart(2, '0'),
+            timestamp: Date.now()
+          };
+          state.chats.push(autoMsg);
           saveState();
+          if(fbActive) {
+            addDoc(collection(db, "chats"), autoMsg).catch(err => console.error("Erro ao enviar auto-resposta:", err));
+          }
           renderChatMessages();
-          document.getElementById("chat-alarm").classList.remove("hidden");
+          const alarm = document.getElementById("chat-alarm");
+          if(alarm) alarm.classList.remove("hidden");
         }, 2000);
       }
     };
@@ -806,6 +909,9 @@
 
       state.events.push(newEventObj);
       saveState();
+      if(fbActive) {
+        setDoc(doc(db, "events", newEventObj.id), newEventObj).catch(err => console.error("Erro ao sincronizar novo evento:", err));
+      }
       showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte ou Josué Bocoto.");
       state.promoterTab = 'my-events';
       renderApp();
@@ -815,6 +921,9 @@
       if(confirm("Tem a absoluta certeza que deseja remover ou cancelar a candidatura deste evento?")) {
         state.events = state.events.filter(evt => evt.id !== id);
         saveState();
+        if(fbActive) {
+          deleteDoc(doc(db, "events", id)).catch(err => console.error("Erro ao excluir evento:", err));
+        }
         showToast("Evento removido com sucesso.");
         renderApp();
       }
@@ -912,6 +1021,9 @@
       state.events[idx].status = "pendente";
 
       saveState();
+      if(fbActive) {
+        setDoc(doc(db, "events", id), state.events[idx]).catch(err => console.error("Erro ao sincronizar edição de evento:", err));
+      }
       closeModal();
       showToast("Evento atualizado! Voltou ao estado Pendente para avaliação dos administradores.");
       renderApp();
@@ -948,6 +1060,9 @@
       }
 
       saveState();
+      if(fbActive) {
+        setDoc(doc(db, "events", id), state.events[idx]).catch(err => console.error("Erro ao sincronizar aprovação de evento:", err));
+      }
       renderApp();
     };
 
@@ -966,6 +1081,14 @@
       }
 
       saveState();
+      if(fbActive) {
+        if(approveState === 'approve') {
+          setDoc(doc(db, "users", phone), state.users[idx]).catch(err => console.error("Erro ao sincronizar aprovação de utilizador:", err));
+        } else {
+          // If deleted in state (filtered), then we delete in Firestore
+          deleteDoc(doc(db, "users", phone)).catch(err => console.error("Erro ao banir utilizador:", err));
+        }
+      }
       renderApp();
     };
 
@@ -973,6 +1096,9 @@
       if(confirm("Deseja eliminar este evento definitivamente do catálogo oficial?")) {
         state.events = state.events.filter(e => e.id !== id);
         saveState();
+        if(fbActive) {
+          deleteDoc(doc(db, "events", id)).catch(err => console.error("Erro ao excluir evento do catálogo:", err));
+        }
         showToast("Evento excluído permanentemente.");
         renderApp();
       }
@@ -1120,6 +1246,9 @@
 
       state.users.push(newUserObj);
       saveState();
+      if(fbActive) {
+        setDoc(doc(db, "users", phone), newUserObj).catch(err => console.error("Erro ao sincronizar novo utilizador:", err));
+      }
       closeModal();
       showToast("Sucesso! A sua inscrição nacional de promotor/utilizador está em fila de revisão de cadastro.");
       renderApp();
