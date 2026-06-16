@@ -270,21 +270,27 @@
     // Pode introduzir aqui as credenciais do seu projeto Firebase diretamente.
     // O portal ativa automaticamente canais e persistência Firebase se detetar configs.
     const firebaseConfig = {
-      apiKey: "AIzaSyCySFZRQy8Coy6cqkuqenwwEv29zWRAnJo",
-      authDomain: "angofest.firebaseapp.com",
-      projectId: "angofest",
-      storageBucket: "angofest.firebasestorage.app",
-      messagingSenderId: "523773787531",
-      appId: "1:523773787531:web:f67f3d8752597948b4038e",
-      measurementId: "G-8EY7H14116"
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
     };
 
     let fbActive = false;
     let fbApp = null;
     let db = null;
+    let storage = null;
 
-    // Declarations for dynamically imported Firestore Functions
+    // Configurable core parameters
+    const PREMIUM_BASE_PRICE = 25000;
+    const PREMIUM_TAX_RATE = 0.20;
+
+    // Declarations for dynamically imported Firestore & Storage Functions
     let doc, setDoc, getDoc, getDocs, onSnapshot, collection, addDoc, updateDoc, deleteDoc;
+    let ref, uploadBytes, getDownloadURL;
 
     async function loadFirebase() {
       // Tentativa segura de inicialização dinâmica via CDNs do Firebase caso as credenciais estejam povoadas
@@ -292,6 +298,7 @@
         try {
           const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
           const firestoreModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+          const storageModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js");
           
           doc = firestoreModule.doc;
           setDoc = firestoreModule.setDoc;
@@ -303,10 +310,15 @@
           updateDoc = firestoreModule.updateDoc;
           deleteDoc = firestoreModule.deleteDoc;
 
+          ref = storageModule.ref;
+          uploadBytes = storageModule.uploadBytes;
+          getDownloadURL = storageModule.getDownloadURL;
+
           fbApp = initializeApp(firebaseConfig);
           db = firestoreModule.getFirestore(fbApp);
+          storage = storageModule.getStorage(fbApp);
           fbActive = true;
-          console.log("Canal Firebase sincronizado com sucesso!");
+          console.log("Canal Firebase sincronizado com sucesso (incluindo Storage)!");
           await initFirebaseSync();
         } catch(e) {
           console.error("Falha ao inicializar o banco de dados Firebase.", e);
@@ -582,9 +594,15 @@
       const container = document.getElementById("modal-container");
       const content = document.getElementById("modal-content");
       if(container && content) {
-        content.innerHTML = htmlContent;
+        content.innerHTML = `
+          <button onclick="closeModal()" class="absolute top-4 right-4 z-50 text-slate-400 hover:text-slate-650 dark:hover:text-white transition p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800" title="Fechar">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          ${htmlContent}
+        `;
         container.classList.remove("hidden");
         container.classList.add("flex");
+        document.body.classList.add("overflow-hidden");
         lucide.createIcons();
       }
     };
@@ -594,8 +612,23 @@
       if(container) {
         container.classList.add("hidden");
         container.classList.remove("flex");
+        document.body.classList.remove("overflow-hidden");
       }
     };
+
+    // Close on Escape or Click Outside
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      const container = document.getElementById("modal-container");
+      if (container && e.target === container) {
+        closeModal();
+      }
+    });
 
     // =========================================================================
     // SPONSORED PROMO AUTOMATIC REPETITION (Every 60 Seconds Popup)
@@ -858,7 +891,64 @@
       renderApp();
     };
 
-    window.dispatchNewEvent = function(e) {
+    window.handleFlyerUploadSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato inválido. Apenas JPG e PNG são permitidos.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      // Create an image object to validate the dimensions
+      const img = new Image();
+      img.onload = function() {
+        if (img.width !== 1080 || img.height !== 1350) {
+          showToast("O cartaz deve estar no formato 1080x1350px para garantir a melhor apresentação.", "error");
+          e.target.value = '';
+          document.getElementById('flyer-preview-container').classList.add('hidden');
+          document.getElementById('flyer-placeholder').classList.remove('hidden');
+          document.getElementById('flyer-dimension-info').classList.add('hidden');
+          return;
+        }
+
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('flyer-preview-img').src = evt.target.result;
+          document.getElementById('flyer-preview-container').classList.remove('hidden');
+          document.getElementById('flyer-placeholder').classList.add('hidden');
+          document.getElementById('flyer-dimension-info').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      };
+      img.onerror = function() {
+        showToast("Erro ao ler imagem do cartaz.", "error");
+        e.target.value = '';
+      };
+      img.src = URL.createObjectURL(file);
+    };
+
+    window.handleComprovativoUploadSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato de comprovativo de pagamento inválido. Apenas JPG, PNG ou PDF são aceites.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      // Show preview or details
+      document.getElementById('comprovativo-file-name').innerText = file.name;
+      document.getElementById('comprovativo-preview-container').classList.remove('hidden');
+      document.getElementById('comprovativo-placeholder').classList.add('hidden');
+    };
+
+    window.dispatchNewEvent = async function(e) {
       e.preventDefault();
       
       const nome = document.getElementById("form-evt-nome").value.trim();
@@ -870,19 +960,51 @@
       const desc = document.getElementById("form-evt-desc").value.trim();
       const prov = document.getElementById("form-evt-provincia").value;
       const mun = document.getElementById("form-evt-municipio").value;
-      const flyer = document.getElementById("form-evt-flyer").value.trim() || "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80";
       
       const planoNode = document.querySelector('input[name="form-evt-plano"]:checked');
       const plano = planoNode ? planoNode.value : "Base";
-      const comprovativo = document.getElementById("form-evt-comprovativo").value.trim();
+
+      // File inputs
+      const flyerFile = document.getElementById("form-evt-file-flyer").files[0];
+      const comprovativoFile = document.getElementById("form-evt-file-comprovativo").files[0];
 
       if(!nome || !local || !data || !hora || !preco || !desc) {
         showToast("Todos os campos assinalados com estrela são absolutamente obrigatórios.", "error");
         return;
       }
 
-      if(plano === "Premium" && !comprovativo) {
-        showToast("Os eventos Premium exigem obrigatoriamente a URL ou indicação do comprovativo de pagamento.", "error");
+      if (!flyerFile) {
+        showToast("Por favor carregar o Cartaz Oficial do Evento.", "error");
+        return;
+      }
+
+      if(plano === "Premium" && !comprovativoFile) {
+        showToast("Os eventos com plano Premium exigem obrigatoriamente o envio do Comprovativo de Pagamento.", "error");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submit-evt-btn");
+      const originalHTML = submitBtn ? submitBtn.innerHTML : "Submeter";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="inline-block animate-spin mr-1.5 font-bold">⏳</span> Sincronizando ficheiros no Storage...`;
+      }
+
+      let flyerUrl = "";
+      let comprovativoUrl = "";
+
+      try {
+        flyerUrl = await window.uploadToStorageOrBase64(flyerFile, "events/flyers");
+        if (comprovativoFile) {
+          comprovativoUrl = await window.uploadToStorageOrBase64(comprovativoFile, "payments/receipts");
+        }
+      } catch (err) {
+        console.error("Erro interno ao enviar imagens:", err);
+        showToast("Falha técnica ao transmitir ficheiros para o Firebase.", "error");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHTML;
+        }
         return;
       }
 
@@ -898,13 +1020,15 @@
         hora: hora,
         categoria: categoria,
         preco: preco,
-        flyer: flyer,
+        flyer: flyerUrl,
         descricao: desc,
         status: "pendente", // ALL initially submitted are status: "pendente" ONLY until authorized
         plano: plano,
-        comprovativo: comprovativo,
+        comprovativo: comprovativoUrl,
+        precoCalculado: plano === "Premium" ? (PREMIUM_BASE_PRICE * (1 + PREMIUM_TAX_RATE)) : 0,
         rejeitado: false,
-        rejeitarMotivo: ""
+        rejeitarMotivo: "",
+        created_at: new Date().toISOString()
       };
 
       state.events.push(newEventObj);
@@ -912,7 +1036,7 @@
       if(fbActive) {
         setDoc(doc(db, "events", newEventObj.id), newEventObj).catch(err => console.error("Erro ao sincronizar novo evento:", err));
       }
-      showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte ou Josué Bocoto.");
+      showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte Francisco ou Josué Bocoto.");
       state.promoterTab = 'my-events';
       renderApp();
     };
@@ -1110,25 +1234,25 @@
     window.openAuthDialog = function(mode) {
       if(mode === 'login') {
         openModal(`
-          <div class="space-y-4 max-w-sm mx-auto">
+          <div class="space-y-4 max-w-sm mx-auto relative p-3">
             <div class="text-center">
               <h3 class="text-xl font-bold font-display text-brand-orange flex items-center justify-center gap-2">
-                <i data-lucide="log-in"></i> Acesso Seguro AngoFest
+                <i data-lucide="log-in" class="w-5 h-5"></i> Acesso Seguro AngoFest
               </h3>
               <p class="text-xs text-slate-400 mt-1">Insira os seus dados de conta autorizada</p>
             </div>
             
             <form onsubmit="handleInAppLogin(event)" class="space-y-3 text-xs">
               <div>
-                <label class="block font-semibold mb-1">Telefone (Angola)</label>
-                <input type="text" id="login-form-phone" placeholder="9xxxxxxxx" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+                <label class="block font-semibold mb-1 text-slate-400">Telefone (Angola)</label>
+                <input type="text" id="login-form-phone" placeholder="9xxxxxxxx" class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               <div>
-                <label class="block font-semibold mb-1">Palavra-passe</label>
-                <input type="password" id="login-form-pass" placeholder="Palavra-passe" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+                <label class="block font-semibold mb-1 text-slate-400">Palavra-passe</label>
+                <input type="password" id="login-form-pass" placeholder="Palavra-passe" class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
-                Iniciar Sessão
+              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-md">
+                <i data-lucide="unlock" class="w-4 h-4"></i> Iniciar Sessão
               </button>
             </form>
             <div class="text-center pt-3 border-t border-slate-200 dark:border-brand-carddark text-xs">
@@ -1139,52 +1263,116 @@
         `);
       } else {
         openModal(`
-          <div class="space-y-4 max-w-md mx-auto">
+          <div class="space-y-4 max-w-md mx-auto relative p-1">
             <div class="text-center">
               <h3 class="text-xl font-bold font-display text-brand-violet flex items-center justify-center gap-2">
-                <i data-lucide="user-plus"></i> Cadastro de Membro ou Promotor
+                <i data-lucide="user-plus" class="w-5 h-5"></i> Cadastro de Membro ou Promotor
               </h3>
               <p class="text-xs text-slate-400 mt-1">Os dados passam por aprovação de José Sorte ou Josué Bocoto</p>
             </div>
 
-            <form onsubmit="handleInAppRegister(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleInAppRegister(event)" class="space-y-3.5 text-xs">
               <div>
-                <label class="block font-semibold mb-1">Nome Completo</label>
-                <input type="text" id="reg-form-nome" placeholder="ex: Ricardo Silva" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                <label class="block font-semibold mb-1 text-slate-400">Nome Completo</label>
+                <input type="text" id="reg-form-nome" placeholder="ex: Ricardo Silva" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="block font-semibold mb-1">Telefone de Angola</label>
-                  <input type="text" id="reg-form-phone" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                  <label class="block font-semibold mb-1 text-slate-400">Telefone de Angola</label>
+                  <input type="text" id="reg-form-phone" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
                 </div>
                 <div>
-                  <label class="block font-semibold mb-1">Idade</label>
-                  <input type="number" id="reg-form-idade" placeholder="Idade" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                  <label class="block font-semibold mb-1 text-slate-400">Idade</label>
+                  <input type="number" id="reg-form-idade" placeholder="Idade" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
                 </div>
               </div>
               <div>
-                <label class="block font-semibold mb-1">Perfil de Acesso</label>
-                <select id="reg-form-role" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark">
+                <label class="block font-semibold mb-1 text-slate-400">Perfil de Acesso</label>
+                <select id="reg-form-role" onchange="window.handleRegRoleChange(this.value)" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-[#2a1b5c] text-slate-800 dark:text-white outline-none">
                   <option value="user">Membro Geral (Quero ver e interagir)</option>
-                  <option value="promoter">Promotor de Eventos (Quero submeter cartazes e planos)</option>
+                  <option value="promoter">Promotor de Eventos (Cadastro de Promotor Completo)</option>
                 </select>
               </div>
+
+              <!-- DYNAMIC PROMOTER FIELDS -->
+              <div id="promoter-additional-fields" class="hidden space-y-3.5 p-3.5 bg-brand-violet/5 border border-brand-violet/10 rounded-2xl animate-fade-in">
+                <span class="block text-[10px] font-bold text-brand-violet uppercase tracking-wide">Ficha Cadastral Profissional do Promotor</span>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">WhatsApp Oficial</label>
+                    <input type="text" id="reg-form-whatsapp" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                  </div>
+                  <div>
+                    <label class="block font-semibold mb-1 text-slate-400">Email Comercial</label>
+                    <input type="email" id="reg-form-email" placeholder="comercial@exemplo.com" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none">
+                  </div>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1 text-slate-400">Logotipo ou Foto do Promotor *</label>
+                  <div class="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-xl bg-slate-50 dark:bg-brand-dark/10 cursor-pointer overflow-hidden text-center hover:border-brand-violet transition" onclick="document.getElementById('reg-form-file-logo').click()">
+                    <input type="file" id="reg-form-file-logo" accept="image/jpeg,image/png" class="hidden" onchange="window.handlePromoterLogoSelect(event)">
+                    <div id="logo-placeholder" class="space-y-1">
+                      <i data-lucide="image-plus" class="w-5 h-5 text-slate-400 mx-auto"></i>
+                      <span class="block text-[10px] text-slate-500 font-semibold">Escolher foto do dispositivo</span>
+                      <span class="block text-[8px] text-slate-400">PNG / JPG</span>
+                    </div>
+                    <div id="logo-preview-container" class="hidden flex items-center gap-2 p-1 font-semibold text-[10px] text-brand-violet bg-brand-violet/10 border border-brand-violet/20 rounded-xl">
+                      <div class="w-8 h-8 rounded-full overflow-hidden border border-brand-violet">
+                        <img id="logo-preview-img" src="" class="w-full h-full object-cover">
+                      </div>
+                      <span>Logotipo selecionado</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <label class="block font-semibold mb-1">Defina a sua Senha</label>
-                <input type="password" id="reg-form-pass" placeholder="Senha de Acesso" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                <label class="block font-semibold mb-1 text-slate-400">Defina a sua Senha</label>
+                <input type="password" id="reg-form-pass" placeholder="Senha de Acesso" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-brand-violet" required>
               </div>
               
               <div class="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-xl text-[10px] text-slate-400 leading-normal">
                 ⚠️ Importante: Após submeter, os administradores verificarão o seu número de telefone de Angola. A ativação ocorre em até poucas horas.
               </div>
 
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
-                Submeter Pedido de Aderência
+              <button type="submit" id="reg-submit-btn" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-md">
+                <i data-lucide="user-check" class="w-4 h-4"></i> Submeter Pedido de Aderência
               </button>
             </form>
           </div>
         `);
       }
+    };
+
+    window.handleRegRoleChange = function(role) {
+      const wrapper = document.getElementById("promoter-additional-fields");
+      if (wrapper) {
+        if (role === "promoter") {
+          wrapper.classList.remove("hidden");
+        } else {
+          wrapper.classList.add("hidden");
+        }
+      }
+    };
+
+    window.handlePromoterLogoSelect = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast("Formato de foto inválido. Por favor envie apenas JPG ou PNG.", "error");
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('logo-preview-img').src = evt.target.result;
+        document.getElementById('logo-preview-container').classList.remove('hidden');
+        document.getElementById('logo-placeholder').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
     };
 
     window.handleInAppLogin = function(e) {
@@ -1216,7 +1404,27 @@
       }
     };
 
-    window.handleInAppRegister = function(e) {
+    window.uploadToStorageOrBase64 = async function(file, folderPath) {
+      if (fbActive && storage) {
+        try {
+          const fileRef = ref(storage, `${folderPath}/${Date.now()}_${file.name}`);
+          const snapshot = await uploadBytes(fileRef, file);
+          return await getDownloadURL(snapshot.ref);
+        } catch (error) {
+          console.error("Erro ao fazer upload para o Firebase Storage:", error);
+          showToast("Erro de rede no upload, convertendo para cópia offline.", "warning");
+        }
+      }
+      
+      // Fallback: Base64 string for offline session persistence
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    };
+
+    window.handleInAppRegister = async function(e) {
       e.preventDefault();
       const nome = document.getElementById("reg-form-nome").value.trim();
       const phone = document.getElementById("reg-form-phone").value.trim();
@@ -1235,13 +1443,48 @@
         return;
       }
 
+      const submitBtn = document.getElementById("reg-submit-btn");
+      const originalHTML = submitBtn ? submitBtn.innerHTML : "Submeter Pedido de Aderência";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Processando dados de cadastro...`;
+      }
+
+      let logoUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80";
+      let whatsapp = "";
+      let email = "";
+
+      if (role === 'promoter') {
+        whatsapp = document.getElementById("reg-form-whatsapp").value.trim();
+        email = document.getElementById("reg-form-email").value.trim();
+        const logoFile = document.getElementById("reg-form-file-logo").files[0];
+        if (logoFile) {
+          try {
+            logoUrl = await window.uploadToStorageOrBase64(logoFile, "promoters/logos");
+          } catch(err) {
+            console.error("Erro no processamento do logotipo:", err);
+          }
+        } else {
+          showToast("A foto/logotipo institucional do promotor é estritamente obrigatória.", "error");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+          }
+          return;
+        }
+      }
+
       const newUserObj = {
         telefone: phone,
         nome: nome,
         idade: idade,
         role: role,
         aprovado: false, // Needing administration greenlight
-        pass: pass
+        pass: pass,
+        logoUrl: logoUrl,
+        whatsapp: whatsapp,
+        email: email,
+        created_at: new Date().toISOString()
       };
 
       state.users.push(newUserObj);
@@ -1250,7 +1493,7 @@
         setDoc(doc(db, "users", phone), newUserObj).catch(err => console.error("Erro ao sincronizar novo utilizador:", err));
       }
       closeModal();
-      showToast("Sucesso! A sua inscrição nacional de promotor/utilizador está em fila de revisão de cadastro.");
+      showToast("Sucesso! A sua candidatura está pendente de aprovação por José Sorte Francisco ou Josué Bocoto.");
       renderApp();
     };
 
@@ -1592,183 +1835,313 @@
     function renderPromoterDashboard(container) {
       const myEvents = state.events.filter(e => e.promotorPhone === state.currentUser?.telefone);
       
+      // Ensure default tab is valid
+      if (!state.promoterTab || (state.promoterTab !== 'my-profile' && state.promoterTab !== 'my-events' && state.promoterTab !== 'submit-form')) {
+        state.promoterTab = 'my-profile';
+      }
+
+      // Pre-calculate tab active states
+      const tabProfileClass = state.promoterTab === 'my-profile' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+      const tabEventsClass = state.promoterTab === 'my-events' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+      const tabSubmitClass = state.promoterTab === 'submit-form' ? 'bg-gradient-to-r from-brand-violet to-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300';
+
+      const basePriceFormatted = PREMIUM_BASE_PRICE.toLocaleString();
+      const taxFormatted = (PREMIUM_BASE_PRICE * PREMIUM_TAX_RATE).toLocaleString();
+      const totalFormatted = (PREMIUM_BASE_PRICE * (1 + PREMIUM_TAX_RATE)).toLocaleString();
+
+      let tabContent = '';
+
+      if (state.promoterTab === 'my-profile') {
+        tabContent = `
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Profile details box -->
+            <div class="p-6 bg-white dark:bg-brand-carddark rounded-2xl border border-slate-200 dark:border-brand-carddark space-y-4 md:col-span-2">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <i data-lucide="user-check" class="w-4 h-4"></i> Informações de Cadastro Nacional
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Nome Institucional</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.nome || ''}</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Idade do Titular</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.idade || ''} anos</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Contacto WhatsApp</span>
+                  <span class="block font-semibold text-slate-850 dark:text-white flex items-center gap-1">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5 text-emerald-500"></i> ${state.currentUser?.whatsapp || 'Não inserido'}
+                  </span>
+                </div>
+                <div>
+                  <span class="block text-slate-400 font-bold uppercase text-[9px] mb-0.5">Email Profissional</span>
+                  <span class="block font-semibold text-slate-800 dark:text-white">${state.currentUser?.email || 'comercial@exemplo.com'}</span>
+                </div>
+              </div>
+              
+              <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                  <span class="block text-slate-400 text-[10px]">Utilizador ID:</span>
+                  <span class="block font-mono text-[9px] font-bold text-brand-orange">UID-${state.currentUser?.telefone || ''}</span>
+                </div>
+                <span class="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full font-bold uppercase text-[9px] border border-emerald-500/25">Aprovado por Admins</span>
+              </div>
+            </div>
+
+            <!-- Payments / billing Box -->
+            <div class="p-6 bg-gradient-to-br from-brand-violet/5 to-brand-orange/5 rounded-2xl border border-brand-violet/10 space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-orange flex items-center gap-1.5 pb-2 border-b border-brand-violet/10">
+                <i data-lucide="wallet" class="w-4 h-4"></i> Faturação & Taxas
+              </h3>
+              <div class="space-y-3.5 text-xs">
+                <div class="p-3 bg-white dark:bg-[#120B2E]/60 border border-slate-200 dark:border-brand-carddark rounded-xl">
+                  <span class="text-[10px] text-slate-450 uppercase font-bold block">Plano Selecionado</span>
+                  <span class="text-sm font-bold text-brand-violet uppercase block mt-0.5">Premium Angola</span>
+                  
+                  <div class="mt-2 text-[10px] space-y-1 text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <div class="flex justify-between">
+                      <span>Valor Base:</span>
+                      <span class="font-bold text-slate-750 dark:text-white">${basePriceFormatted} Kz</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Taxa Comercial (+${PREMIUM_TAX_RATE * 100}%):</span>
+                      <span class="font-bold text-slate-750 dark:text-white">${taxFormatted} Kz</span>
+                    </div>
+                    <div class="flex justify-between border-t border-dashed border-slate-200 dark:border-[#2a1b5c] pt-1.5 mt-1 font-bold text-brand-orange text-[11px]">
+                      <span>Total Líquido:</span>
+                      <span>${totalFormatted} Kz</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <span class="block text-[8px] text-slate-400 leading-normal">
+                  * O Plano Base de publicações comuns é sempre gratuito. Valores calculados automaticamente de acordo com as diretrizes de José Sorte Francisco e Josué Bocoto.
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (state.promoterTab === 'my-events') {
+        const eventsListHtml = myEvents.map(evt => {
+          let badgeClass = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
+          let label = "Pendente";
+          if (evt.status === "aprovado") {
+            badgeClass = "bg-emerald-555 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
+            label = "Aprovado Oficial";
+          } else if (evt.status === "rejeitado") {
+            badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+            label = "Recusado / Erro de Comprovativo";
+          }
+
+          return `
+            <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-[#120B2E]/50 flex gap-4 relative">
+              <div class="w-20 h-24 rounded-lg bg-neutral-900 border overflow-hidden flex-shrink-0">
+                <img src="${evt.flyer}" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1 space-y-2">
+                <h4 class="font-bold text-xs uppercase text-slate-800 dark:text-slate-100 leading-tight">${evt.nome}</h4>
+                <p class="text-[10px] text-slate-400 capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
+                <p class="text-xs font-bold text-brand-orange">${evt.preco}</p>
+                
+                <div class="flex items-center gap-1.5 text-[10px]">
+                  <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeClass}">${label}</span>
+                  <span class="text-[9px] font-bold uppercase text-slate-400 px-1 border border-slate-200 dark:border-slate-800 rounded">${evt.plano}</span>
+                </div>
+
+                ${evt.status === "rejeitado" ? `
+                  <div class="p-2 bg-red-500/5 text-red-500 rounded text-[9px] font-semibold mt-1">
+                    <strong>Motivo:</strong> ${evt.rejeitarMotivo || 'Cartaz impróprio ou comprovativo não verificado.'}
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Actions bar -->
+              <div class="absolute top-4 right-4 flex gap-1">
+                <button onclick="triggerPromoterEventEdit('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-brand-orange transition" title="Editar"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                <button onclick="triggerPromoterEventRemove('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-red-500 transition" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        tabContent = `
+          <div class="space-y-4">
+            <h3 class="text-sm font-bold font-display uppercase tracking-wider text-slate-705 dark:text-slate-300">Histórico de Candidaturas & Eventos Enviados</h3>
+            ${myEvents.length > 0 ? `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${eventsListHtml}
+              </div>
+            ` : `
+              <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
+                <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome || 'Promotor'}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
+                <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
+              </div>
+            `}
+          </div>
+        `;
+      } else if (state.promoterTab === 'submit-form') {
+        tabContent = `
+          <div class="bg-white dark:bg-[#120B2E]/60 border border-slate-202 dark:border-brand-carddark/60 rounded-3xl p-6 max-w-2xl mx-auto">
+            <h3 class="text-lg font-bold font-display uppercase text-brand-orange pb-3 border-b border-slate-200 dark:border-brand-carddark/50 mb-5">Submissão Oficial de Cartazes</h3>
+            
+            <form onsubmit="dispatchNewEvent(event)" class="space-y-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Título do Evento *</label>
+                <input type="text" id="form-evt-nome" placeholder="Ex: Mega Show Reencontro" class="w-full text-slate-800 dark:text-white p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs focus:ring-1 focus:ring-brand-violet outline-none" required>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Província *</label>
+                  <select id="form-evt-provincia" onchange="cascadeFormMunicipios(this.value)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-white outline-none">
+                    ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}">${p}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Município *</label>
+                  <select id="form-evt-municipio" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-white outline-none">
+                    <!-- Cascade Loaded dynamically -->
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Data *</label>
+                  <input type="date" id="form-evt-data" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Hora *</label>
+                  <input type="time" id="form-evt-hora" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Categoria *</label>
+                  <select id="form-evt-categoria" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-755 dark:text-white_align">
+                    ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Preço Normal (Kz ou escreva: Gratuito) *</label>
+                  <input type="text" id="form-evt-preco" placeholder="Ex: 5.000 Kz" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Local Físico / Sala *</label>
+                <input type="text" id="form-evt-local" placeholder="Ex: Multiusos da Kilamba, Sala A" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+              </div>
+
+              <!-- DIRECT CARTEZ UPLOAD BLOCK -->
+              <div>
+                <label class="block font-bold text-slate-400 mb-1 flex items-center gap-1.5">
+                  <i data-lucide="image" class="w-4 h-4 text-brand-orange"></i> Enviar Cartaz do Evento *
+                </label>
+                <div class="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-2xl p-6 bg-slate-50 dark:bg-brand-dark/10 text-center cursor-pointer transition hover:border-brand-orange group" onclick="document.getElementById('form-evt-file-flyer').click()">
+                  <input type="file" id="form-evt-file-flyer" accept="image/jpeg,image/png" class="hidden" onchange="window.handleFlyerUploadSelect(event)" required>
+                  <div id="flyer-placeholder" class="space-y-2">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-brand-orange transition mx-auto"></i>
+                    <span class="block text-xs font-semibold text-slate-500">Clique para carregar o seu cartaz</span>
+                    <span class="block text-[10px] text-slate-400 leading-relaxed">Apenas JPG ou PNG com proporção obrigatória de 4:5 (1080 x 1350px)</span>
+                  </div>
+                  <div id="flyer-preview-container" class="hidden w-28 aspect-[4/5] rounded-xl overflow-hidden border border-brand-orange shadow-md relative">
+                    <img id="flyer-preview-img" src="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition flex items-center justify-center text-[9px] text-white font-bold">Alterar Cartaz</div>
+                  </div>
+                </div>
+                <p id="flyer-dimension-info" class="hidden text-[10px] text-emerald-500 font-semibold mt-1">✓ Dimensão perfeita de cartaz validada: 1080x1350px</p>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-400 mb-1">Descrição Detalhada do Evento *</label>
+                <textarea id="form-evt-desc" rows="4" placeholder="Indique as atrações principais, políticas de entrada, contactos de cartões..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-[#2a1b5c] bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-805 dark:text-white" required></textarea>
+              </div>
+
+              <!-- Plano Escolha -->
+              <div class="p-4 rounded-2xl bg-brand-violet/5 border border-brand-violet/20 space-y-3">
+                <label class="block font-bold text-sm tracking-wide text-brand-violet">Escolha o seu Plano de Divulgação</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label class="p-3 bg-white dark:bg-[#120B2E] border border-slate-200 dark:border-brand-carddark rounded-xl flex items-start gap-2 cursor-pointer">
+                    <input type="radio" name="form-evt-plano" value="Base" class="mt-1" checked onchange="window.toggleReceiptViewForPlano('Base')">
+                    <div>
+                      <span class="block font-bold text-xs uppercase text-slate-700 dark:text-white">DIVULGAÇÃO BASE</span>
+                      <span class="block text-[10px] text-slate-400 mt-0.5">Surgimento livre no catálogo geral filtrado por província.</span>
+                      <span class="block text-xs font-bold text-green-500 mt-2">Gratuito</span>
+                    </div>
+                  </label>
+                  <label class="p-3 bg-white dark:bg-[#120B2E] border border-brand-orange rounded-xl flex items-start gap-2 cursor-pointer">
+                    <input type="radio" name="form-evt-plano" value="Premium" class="mt-1" onchange="window.toggleReceiptViewForPlano('Premium')">
+                    <div>
+                      <span class="block font-bold text-xs uppercase text-brand-orange">DIVULGAÇÃO PREMIUM</span>
+                      <span class="block text-[10px] text-slate-400 mt-0.5">Topo prioritário, slide horizontais de elite, popup automático repetitivo.</span>
+                      <span class="block text-xs font-bold text-brand-violet mt-2">${totalFormatted} Kz Líquido</span>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- DIRECT COMPROVATIVO UPLOAD BLOCK -->
+                <div id="comprovativo-wrapper" class="hidden space-y-1.5 pt-2">
+                  <label class="block font-bold text-brand-orange flex items-center gap-1.5">
+                    <i data-lucide="file-check" class="w-4 h-4 text-brand-orange"></i> Enviar Comprovativo de Pagamento *
+                  </label>
+                  <div class="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-[#2a1b5c] rounded-2xl p-5 bg-slate-50 dark:bg-brand-dark/10 text-center cursor-pointer transition hover:border-brand-orange" onclick="document.getElementById('form-evt-file-comprovativo').click()">
+                    <input type="file" id="form-evt-file-comprovativo" accept="image/jpeg,image/png,application/pdf" class="hidden" onchange="window.handleComprovativoUploadSelect(event)">
+                    <div id="comprovativo-placeholder" class="space-y-1.5">
+                      <i data-lucide="file-plus" class="w-7 h-7 text-slate-400 mx-auto"></i>
+                      <span class="block text-[11px] font-semibold text-slate-500">Clique para anexar comprovativo</span>
+                      <span class="block text-[9px] text-slate-400">Suporta formato JPG, PNG ou PDF</span>
+                    </div>
+                    <div id="comprovativo-preview-container" class="hidden flex items-center gap-2 p-2 bg-emerald-500/10 text-emerald-555 border border-emerald-500/30 rounded-xl text-[10px] font-semibold">
+                      <i data-lucide="check-circle" class="w-4 h-4"></i>
+                      <span id="comprovativo-file-name" class="truncate max-w-[150px]">comprovativo.pdf</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="submit-evt-btn" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-brand-violet/20">
+                <i data-lucide="check-circle-2"></i> Submeter para José Sorte & Josué Bocoto
+              </button>
+            </form>
+          </div>
+        `;
+      }
+
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-brand-carddark/40 border border-slate-200 dark:border-brand-carddark/60 p-6 rounded-3xl">
-            <div>
-              <span class="text-xs font-bold text-brand-violet uppercase tracking-wider">Dashboard do Promotor Autorizado</span>
-              <h2 class="text-2xl font-bold font-display mt-0.5">Olá, ${state.currentUser?.nome}!</h2>
-              <p class="text-xs text-slate-400">Status da Conta: <span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 text-[10px] rounded-full font-bold uppercase border border-emerald-500/20">Aprovada Ativa</span></p>
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-[#150D3A]/20 border border-slate-205 dark:border-brand-carddark/60 p-6 rounded-3xl">
+            <div class="flex items-center gap-3.5">
+              <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-brand-orange bg-brand-violet/5 flex-shrink-0">
+                <img src="${state.currentUser?.logoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-brand-orange uppercase tracking-wider">Painel do Promotor Credenciado</span>
+                <h2 class="text-xl font-bold font-display leading-tight">${state.currentUser?.nome || 'Promotor Oficial'}</h2>
+                <p class="text-[10px] text-slate-400 mt-0.5">Ficha de Angola: <span class="text-emerald-500 font-bold">@${state.currentUser?.telefone || ''}</span> | Licença ativa IP</p>
+              </div>
             </div>
             
-            <div class="flex gap-2">
-              <button onclick="setPromoterActiveTab('my-events')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'my-events' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Os Meus Eventos (${myEvents.length})</button>
-              <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'submit-form' ? 'bg-gradient-to-r from-brand-violet to-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Submeter Novo Cartaz</button>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="setPromoterActiveTab('my-profile')" class="px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase transition ${tabProfileClass}">Meu Perfil</button>
+              <button onclick="setPromoterActiveTab('my-events')" class="px-3.5 py-2 rounded-xl text-[11px] font-bold uppercase transition ${tabEventsClass}">Os Meus Eventos (${myEvents.length})</button>
+              <button onclick="setPromoterActiveTab('submit-form')" class="px-3.5 py-2.5 rounded-xl text-[11px] font-bold uppercase transition ${tabSubmitClass}">Novo Cartaz</button>
             </div>
           </div>
 
-          ${state.promoterTab === 'my-events' ? `
-            <div class="space-y-4">
-              <h3 class="text-sm font-bold font-display uppercase tracking-wider">Histórico de Candidaturas & Eventos Enviados</h3>
-              
-              ${myEvents.length > 0 ? `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  ${myEvents.map(evt => {
-                    let badgeClass = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
-                    let label = "Pendente";
-                    if(evt.status === "aprovado") {
-                      badgeClass = "bg-emerald-505 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
-                      label = "Aprovado Oficial";
-                    } else if (evt.status === "rejeitado") {
-                      badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
-                      label = "Recusado / Erro de Comprovativo";
-                    }
-
-                    return `
-                      <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-[#120B2E]/50 flex gap-4 relative">
-                        <div class="w-20 h-24 rounded-lg bg-neutral-900 border overflow-hidden flex-shrink-0">
-                          <img src="${evt.flyer}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="flex-1 space-y-2">
-                          <h4 class="font-bold text-xs uppercase text-slate-800 dark:text-slate-100 leading-tight">${evt.nome}</h4>
-                          <p class="text-[10px] text-slate-400 capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
-                          <p class="text-xs font-bold text-brand-orange">${evt.preco}</p>
-                          
-                          <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeClass}">${label}</span>
-                            <span class="text-[9px] font-bold uppercase text-slate-400 px-1">${evt.plano}</span>
-                          </div>
-
-                          ${evt.status === "rejeitado" ? `
-                            <div class="p-2 bg-red-500/5 text-red-500 rounded text-[9px] font-semibold mt-1">
-                              <strong>Motivo:</strong> ${evt.rejeitarMotivo || 'Cartaz impróprio ou comprovativo não verificado.'}
-                            </div>
-                          ` : ''}
-                        </div>
-
-                        <!-- Actions bar -->
-                        <div class="absolute top-4 right-4 flex gap-1">
-                          <button onclick="triggerPromoterEventEdit('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-brand-orange transition" title="Editar"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                          <button onclick="triggerPromoterEventRemove('${evt.id}')" class="p-2 bg-slate-105 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-red-500 transition" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              ` : `
-                <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
-                  <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
-                  <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
-                </div>
-              `}
-            </div>
-          ` : `
-            <!-- SUBMIT EVENT SCREEN (PROMOTERS CADASTRO FLUXO COMPLETO) -->
-            <div class="bg-white dark:bg-[#120B2E]/60 border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 max-w-2xl mx-auto">
-              <h3 class="text-lg font-bold font-display uppercase text-brand-orange pb-3 border-b border-slate-205 dark:border-brand-carddark/50 mb-5">Submissão Oficial de Cartazes</h3>
-              
-              <form onsubmit="dispatchNewEvent(event)" class="space-y-4 text-xs">
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Título do Evento *</label>
-                  <input type="text" id="form-evt-nome" placeholder="Ex: Mega Show Reencontro" class="w-full text-slate-800 dark:text-white p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs focus:ring-1 focus:ring-brand-violet outline-none" required>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Província *</label>
-                    <select id="form-evt-provincia" onchange="cascadeFormMunicipios(this.value)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-xs outline-none">
-                      ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}">${p}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Município *</label>
-                    <select id="form-evt-municipio" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 outline-none">
-                      <!-- Cascade Loaded dynamically -->
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Data *</label>
-                    <input type="date" id="form-evt-data" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Hora *</label>
-                    <input type="time" id="form-evt-hora" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Categoria *</label>
-                    <select id="form-evt-categoria" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700">
-                      ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block font-bold text-slate-400 mb-1">Preço Normal (Kz ou escreva: Gratuito) *</label>
-                    <input type="text" id="form-evt-preco" placeholder="Ex: 5.000 Kz" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Local Físico / Sala *</label>
-                  <input type="text" id="form-evt-local" placeholder="Ex: Multiusos da Kilamba, Sala A" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Link do Cartaz (URL da imagem do flyer / flyer.png) *</label>
-                  <input type="url" id="form-evt-flyer" placeholder="https://exemplo.com/flyer.jpg" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs">
-                </div>
-
-                <div>
-                  <label class="block font-bold text-slate-400 mb-1">Descrição Detalhada do Evento *</label>
-                  <textarea id="form-evt-desc" rows="4" placeholder="Indique as atrações principais, políticas de entrada, contactos de cartões..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required></textarea>
-                </div>
-
-                <!-- Plano Escolha -->
-                <div class="p-4 rounded-2xl bg-brand-violet/5 border border-brand-violet/20 space-y-3">
-                  <label class="block font-bold text-sm tracking-wide text-brand-violet">Escolha o seu Plano de Divulgação</label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-slate-200 dark:border-brand-carddark rounded-xl flex items-start gap-2 cursor-pointer">
-                      <input type="radio" name="form-evt-plano" value="Base" class="mt-1" checked onchange="toggleReceiptViewForPlano('Base')">
-                      <div>
-                        <span class="block font-bold text-xs uppercase text-slate-700 dark:text-white">DIVULGAÇÃO BASE</span>
-                        <span class="block text-[10px] text-slate-400 mt-0.5">Surgimento livre no catálogo geral filtrado por província.</span>
-                        <span class="block text-xs font-bold text-brand-orange mt-2">Gratuito</span>
-                      </div>
-                    </label>
-                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-brand-orange rounded-xl flex items-start gap-2 cursor-pointer">
-                      <input type="radio" name="form-evt-plano" value="Premium" class="mt-1" onchange="toggleReceiptViewForPlano('Premium')">
-                      <div>
-                        <span class="block font-bold text-xs uppercase text-brand-orange">DIVULGAÇÃO PREMIUM</span>
-                        <span class="block text-[10px] text-slate-400 mt-0.5">Topo prioritário, slide horizontais de elite, popup automático repetitivo.</span>
-                        <span class="block text-xs font-bold text-brand-violet mt-2">Consultar taxa WhatsApp</span>
-                      </div>
-                    </label>
-                  </div>
-
-                  <!-- Comprovativo block -->
-                  <div id="comprovativo-wrapper" class="hidden space-y-1.5 pt-2">
-                    <label class="block font-bold text-brand-orange">Insira a URL do Comprovativo de Pagamento ou Referência *</label>
-                    <input type="text" id="form-evt-comprovativo" placeholder="URL do ficheiro enviado, imagem ou referência do depósito" class="w-full p-3 rounded-xl bg-white dark:bg-[#120B2E] text-xs font-semibold border border-brand-orange outline-none">
-                  </div>
-                </div>
-
-                <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-brand-violet/20">
-                  <i data-lucide="check-circle-2"></i> Submeter para José Sorte & Josué Bocoto
-                </button>
-              </form>
-            </div>
-          `}
+          <div id="tab-holder-content">
+            ${tabContent}
+          </div>
         </div>
       `;
 
       // Default cascade trigger on promoter form
-      if(state.promoterTab === 'submit-form') {
+      if (state.promoterTab === 'submit-form') {
         cascadeFormMunicipios(Object.keys(PROVINCIAS_ANGOLA)[0]);
       }
+      lucide.createIcons();
     }
 
     // Dynamic cascade select filler
@@ -1786,11 +2159,35 @@
 
       if(plano === "Premium") {
         wr.classList.remove("hidden");
-        document.getElementById("form-evt-comprovativo").setAttribute("required", "true");
+        document.getElementById("form-evt-file-comprovativo").setAttribute("required", "true");
       } else {
         wr.classList.add("hidden");
-        document.getElementById("form-evt-comprovativo").removeAttribute("required");
+        document.getElementById("form-evt-file-comprovativo").removeAttribute("required");
       }
+    };
+
+    window.adminPreviewComprovativo = function(dataUrl) {
+      if (!dataUrl) return;
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-brand-carddark">
+            <h3 class="text-sm font-bold uppercase text-brand-orange flex items-center gap-1.5 font-display">
+              <i data-lucide="file-check"></i> Comprovativo de Transação
+            </h3>
+          </div>
+          <div class="max-h-[70vh] overflow-y-auto rounded-xl border border-slate-200 dark:border-brand-carddark flex justify-center bg-slate-900/40 p-2">
+            ${dataUrl.startsWith("data:application/pdf") ? `
+              <embed src="${dataUrl}" type="application/pdf" class="w-full h-[55vh]" />
+            ` : `
+              <img src="${dataUrl}" class="max-w-full h-auto mx-auto object-contain rounded-lg" style="max-height: 55vh;" />
+            `}
+          </div>
+          <div class="flex justify-between gap-2 pt-2">
+            <span class="text-[9px] text-slate-400 font-medium">Validado por José Sorte Francisco & Josué Bocoto</span>
+            <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold uppercase text-[10px]">Fechar</button>
+          </div>
+        </div>
+      `);
     };
 
     // 3. ADMIN DASHBOARD
@@ -1840,7 +2237,24 @@
                           <p>📅 Horário: <strong class="text-slate-800 dark:text-white">${sub.data} às ${sub.hora}</strong></p>
                           <p>💵 Preço: <strong class="text-brand-orange">${sub.preco}</strong></p>
                           <p>👤 Contato Promotor: <strong>${sub.promotor} (${sub.promotorPhone})</strong></p>
-                          ${sub.plano === 'Premium' ? `<p class="col-span-2 text-brand-orange font-bold font-mono">🎫 Comprovativo: <a href="${sub.comprovativo}" target="_blank" class="hover:underline">${sub.comprovativo}</a></p>` : ''}
+                          ${sub.plano === 'Premium' ? `
+                            <div class="col-span-2 p-2.5 bg-brand-orange/5 border border-brand-orange/15 rounded-xl flex items-center justify-between gap-3 mt-1.5 w-full">
+                              <div class="flex items-center gap-2 min-w-0">
+                                <i data-lucide="receipt" class="w-4 h-4 text-brand-orange flex-shrink-0"></i>
+                                <div class="min-w-0">
+                                  <span class="block text-[8px] text-slate-400 font-bold uppercase tracking-wide">Comprovativo de Depósito</span>
+                                  <span class="block text-[10px] font-semibold text-slate-700 dark:text-white truncate">Premium Comprovativo</span>
+                                </div>
+                              </div>
+                              <div class="flex gap-1.5 flex-shrink-0">
+                                ${sub.comprovativo && (sub.comprovativo.startsWith('data:image') || sub.comprovativo.includes('events') || (!sub.comprovativo.endsWith('.pdf') && !sub.comprovativo.startsWith('data:application/pdf'))) ? `
+                                  <button type="button" onclick="window.adminPreviewComprovativo('${sub.comprovativo}')" class="px-2.5 py-1.5 bg-brand-orange text-white text-[9px] font-bold uppercase rounded-lg hover:bg-brand-orange/90 transition flex items-center gap-1"><i data-lucide="eye" class="w-3 h-3"></i> Visualizar</button>
+                                ` : `
+                                  <a href="${sub.comprovativo}" target="_blank" class="px-2.5 py-1.5 bg-brand-violet text-white text-[9px] font-bold uppercase rounded-lg hover:bg-brand-violet/90 transition flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Baixar Anexo</a>
+                                `}
+                              </div>
+                            </div>
+                          ` : ''}
                         </div>
 
                         <!-- ACTIONS PANEL -->
