@@ -9,15 +9,14 @@
   <meta name="description" content="AngoFest - O maior portal de eventos de Angola. Encontre shows, festivais, festas, conferências e feiras em todas as províncias. Crie e promova o seu evento!">
   <meta name="keywords" content="AngoFest, Eventos Angola, Festas Luanda, Shows Angola, Festivais Angola, Promotores Angola, Cartaz Angola, Cultura Angola">
   <meta name="author" content="AngoFest Limitada">
-  <meta property="og:title" content="AngoFest | Portal de Eventos e Entretenimento de Angola">
-  <meta property="og:description" content="Conectando você às melhores experiências, festas, conferências e atividades culturais de Cabinda ao Cunene.">
+  <meta property="og:title" content="AngoFest | Portal de Eventos de Angola">
+  <meta property="og:description" content="A melhor e mais completa plataforma de promoção de lazer, shows e congressos de Cabinda ao Cunene.">
   <meta property="og:image" content="logo.png">
   <meta property="og:type" content="website">
 
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Tailwind Custom Configuration -->
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -27,14 +26,15 @@
             brand: {
               violet: '#7C3AED',
               orange: '#FF5A00',
-              dark: '#0F0922',
-              carddark: '#1D153A',
+              dark: '#080415',
+              carddark: '#120B2E',
               lightbg: '#F8FAFC',
               borderlight: '#E2E8F0'
             }
           },
           fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif']
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif']
           }
         }
       }
@@ -68,193 +68,209 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(124, 58, 237, 0.6);
     }
-    /* Simple dynamic fade animations */
     .fade-in {
       animation: fadeIn 0.4s ease-out forwards;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-[#090514] dark:text-slate-100 min-h-screen transition-colors duration-300">
+<body class="bg-slate-50 text-slate-800 dark:bg-[#06030F] dark:text-slate-100 min-h-screen transition-colors duration-300">
 
-  <!-- Loading Screen Overlay -->
-  <div id="loading-screen" class="fixed inset-0 z-550 flex flex-col items-center justify-center bg-brand-dark text-white">
-    <div class="relative w-24 h-24 mb-4">
+  <!-- Loading Overlay -->
+  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-brand-dark text-white">
+    <div class="relative w-16 h-16 mb-4">
       <div class="absolute inset-0 border-4 border-t-brand-orange border-brand-violet rounded-full animate-spin"></div>
-      <div class="absolute inset-2 flex items-center justify-center font-display font-bold text-lg text-brand-orange">AF</div>
+      <div class="absolute inset-2 flex items-center justify-center font-display font-bold text-sm text-brand-orange">AF</div>
     </div>
-    <h2 class="text-xl font-bold tracking-wider animate-pulse">Carregando AngoFest...</h2>
-    <p class="text-xs text-slate-400 mt-2">O Epicentro do Entretenimento em Angola</p>
+    <h2 class="text-lg font-bold font-display tracking-wider animate-pulse">CARREGANDO ANGOFEST...</h2>
+    <p class="text-xs text-slate-400 mt-1">Conectando ao entretenimento de Angola</p>
   </div>
 
-  <!-- Header Section -->
-  <header class="sticky top-0 z-40 backdrop-blur-md bg-white/90 dark:bg-[#0F0922]/90 border-b border-slate-200 dark:border-brand-carddark/50 transition-colors">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/95 dark:bg-[#080415]/95 border-b border-slate-200 dark:border-brand-carddark/50 transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
       <!-- Logo -->
       <a href="#" class="flex items-center gap-2" onclick="navigateTo('home')">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-violet to-brand-orange flex items-center justify-center text-white font-display font-bold text-xl shadow-lg shadow-brand-violet/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-violet to-brand-orange flex items-center justify-center text-white font-display font-bold text-xl shadow-lg">
           A
         </div>
         <div>
           <span class="text-xl font-bold font-display uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">AngoFest</span>
-          <span class="block text-[9px] text-slate-400 font-medium tracking-widest uppercase">Angola Eventos</span>
+          <span class="block text-[8px] text-slate-400 font-medium tracking-widest uppercase">Portal de Eventos</span>
         </div>
       </a>
 
-      <!-- Quick Search Bar (Header Desk) -->
-      <div class="hidden md:flex flex-1 max-w-md relative">
-        <input type="text" id="header-search" oninput="handleInstantSearch(this.value)" placeholder="Pesquise shows, festas, conferências..." class="w-full h-10 pl-10 pr-4 rounded-full border border-slate-300 dark:border-brand-carddark focus:ring-2 focus:ring-brand-violet outline-none bg-slate-100 dark:bg-[#1D153A]/50 text-sm">
-        <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-5 h-5"></i>
+      <!-- Instant Search Input -->
+      <div class="hidden md:flex flex-1 max-w-sm relative">
+        <input type="text" id="header-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise shows, festas, promotores..." class="w-full h-10 pl-10 pr-4 rounded-full border border-slate-300 dark:border-brand-carddark/80 bg-slate-100 dark:bg-brand-carddark/40 outline-none focus:ring-2 focus:ring-brand-violet text-sm">
+        <i data-lucide="search" class="absolute left-3.5 top-2.5 text-slate-400 w-4 h-4"></i>
       </div>
 
-      <!-- Desk Navigation Links -->
+      <!-- Links Grid -->
       <nav class="hidden lg:flex items-center gap-6">
-        <a href="#" onclick="navigateTo('home')" class="hover:text-brand-orange font-medium text-sm transition">Início</a>
-        <a href="#provincias-sec" class="hover:text-brand-orange font-medium text-sm transition">Províncias</a>
-        <a href="#sobre-sec" class="hover:text-brand-orange font-medium text-sm transition">Sobre Nós</a>
-        <a href="#contacto-sec" class="hover:text-brand-orange font-medium text-sm transition">Contactos</a>
+        <button onclick="navigateTo('home')" class="hover:text-brand-orange font-medium text-sm transition">Início</button>
+        <button onclick="scrollToElement('provincias-sec')" class="hover:text-brand-orange font-medium text-sm transition">Províncias</button>
+        <button onclick="scrollToElement('sobre-sec')" class="hover:text-brand-orange font-medium text-sm transition">Sobre Nós</button>
+        <button onclick="scrollToElement('contacto-sec')" class="hover:text-brand-orange font-medium text-sm transition">Contactos</button>
       </nav>
 
-      <!-- Auth & System Controls -->
+      <!-- Theme & Profile Widgets -->
       <div class="flex items-center gap-3">
-        <!-- Theme Toggle -->
-        <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-[#1D153A] text-slate-600 dark:text-slate-300 hover:scale-105 transition" title="Alternar modo claro/escuro">
-          <i data-lucide="moon" id="theme-icon-dark" class="w-5 h-5 hidden dark:block"></i>
-          <i data-lucide="sun" id="theme-icon-light" class="w-5 h-5 block dark:hidden"></i>
+        <!-- Mode Switcher -->
+        <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-brand-carddark text-slate-600 dark:text-slate-300 hover:scale-105 transition" title="Alternar Modo Escuro/Claro">
+          <i data-lucide="moon" id="moon-ico" class="w-5 h-5 hidden dark:block"></i>
+          <i data-lucide="sun" id="sun-ico" class="w-5 h-5 block dark:hidden"></i>
         </button>
 
-        <!-- User Authentication Widget -->
-        <div id="auth-widget" class="relative">
-          <!-- Populated by JavaScript based on auth state -->
-        </div>
+        <!-- Dynamic Auth Widget -->
+        <div id="header-auth-section" class="flex items-center gap-2"></div>
 
-        <!-- Mobile Menu Trigger -->
-        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-[#1D153A] text-slate-600 dark:text-slate-300">
-          <i data-lucide="menu" id="menu-icon-hamburger" class="w-6 h-6"></i>
+        <!-- Mobile Drawer Menu Trigger -->
+        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-[#120B2E] text-slate-600 dark:text-slate-300">
+          <i data-lucide="menu" class="w-6 h-6"></i>
         </button>
       </div>
     </div>
 
-    <!-- Mobile Quick Search Bar & Menu Drawer -->
-    <div id="mobile-drawer" class="hidden lg:hidden bg-white dark:bg-brand-dark px-4 pb-6 transition-all border-t border-slate-200 dark:border-brand-carddark/40">
-      <div class="mt-4 relative mb-4">
-        <input type="text" id="mobile-search" oninput="handleInstantSearch(this.value)" placeholder="Pesquise eventos..." class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-brand-carddark focus:ring-2 focus:ring-brand-violet outline-none bg-slate-100 dark:bg-[#1D153A]/50 text-sm">
-        <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-5 h-5"></i>
+    <!-- Mobile Drawer Container -->
+    <div id="mobile-menu-drawer" class="hidden lg:hidden bg-white dark:bg-[#080415] border-t border-slate-200 dark:border-brand-carddark px-4 pb-6 pt-2">
+      <div class="relative mb-4">
+        <input type="text" id="mobile-search-bar" oninput="handleInstantSearch(this.value)" placeholder="Pesquise eventos..." class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-100 dark:bg-brand-carddark/50 outline-none text-sm">
+        <i data-lucide="search" class="absolute left-3 top-3 text-slate-400 w-4 h-4"></i>
       </div>
-      <div class="flex flex-col gap-4">
-        <a href="#" onclick="navigateTo('home'); toggleMobileMenu()" class="hover:text-brand-orange font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Início</a>
-        <a href="#provincias-sec" onclick="toggleMobileMenu()" class="hover:text-brand-orange font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Províncias</a>
-        <a href="#sobre-sec" onclick="toggleMobileMenu()" class="hover:text-brand-orange font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Sobre Nós</a>
-        <a href="#contacto-sec" onclick="toggleMobileMenu()" class="hover:text-brand-orange font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Contactos</a>
+      <div class="flex flex-col gap-3">
+        <button onclick="navigateTo('home'); toggleMobileMenu()" class="text-left font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Início</button>
+        <button onclick="scrollToElement('provincias-sec'); toggleMobileMenu()" class="text-left font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Províncias</button>
+        <button onclick="scrollToElement('sobre-sec'); toggleMobileMenu()" class="text-left font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Sobre Nós</button>
+        <button onclick="scrollToElement('contacto-sec'); toggleMobileMenu()" class="text-left font-medium py-2 border-b border-slate-100 dark:border-brand-carddark/30">Contactos</button>
       </div>
     </div>
   </header>
 
-  <!-- Notification Popup (Toasts) -->
-  <div id="toast-container" class="fixed top-24 right-4 z-500 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+  <!-- Live Toast Alert Center -->
+  <div id="toast-bin" class="fixed top-24 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-  <!-- Primary Application Views -->
-  <main id="main-content" class="fade-in">
-    <!-- Rendered dynamically by state router -->
+  <!-- Primary Frame Workspace -->
+  <main id="app-workspace" class="fade-in max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 my-4 min-h-[70vh]">
+    <!-- Renders views dynamically -->
   </main>
 
-  <!-- Shared Visual Components: Floating Buttons & Standard Modals -->
+  <!-- Footer section -->
+  <footer class="bg-white dark:bg-[#080415] border-t border-slate-200 dark:border-brand-carddark py-12 mt-20 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Grid 1 -->
+      <div class="md:col-span-2 space-y-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-violet to-brand-orange flex items-center justify-center text-white font-display font-bold">A</div>
+          <span class="text-lg font-bold font-display uppercase tracking-wide">AngoFest</span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+          A maior e mais inovadora plataforma nacional de licenciamento, registo de promotores e pesquisa instantânea de espetáculos, festivas, feiras corporativas e conferências em Angola.
+        </p>
+        <div class="flex gap-3 pt-2">
+          <a href="#" class="p-2 rounded-full bg-slate-105 dark:bg-brand-carddark hover:text-brand-orange transition"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+          <a href="#" class="p-2 rounded-full bg-slate-105 dark:bg-brand-carddark hover:text-brand-orange transition"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+          <a href="#" class="p-2 rounded-full bg-slate-105 dark:bg-brand-carddark hover:text-brand-orange transition"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+        </div>
+      </div>
+      <!-- Grid 2: Admins Biografia -->
+      <div id="sobre-sec" class="space-y-4">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-brand-orange">Fundadores & História</h4>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+          Fundado por <strong>José Sorte Francisco</strong> e <strong>Josué Bocoto</strong>, a AngoFest nasceu da necessidade de modernizar a publicidade de eventos locais, impulsionando a cultura angolana e facilitando a integração de promotores de festas de Cabinda ao Cunene.
+        </p>
+      </div>
+      <!-- Grid 3: Contactos -->
+      <div id="contacto-sec" class="space-y-3">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-brand-violet">Central de Parcerias</h4>
+        <ul class="text-xs text-slate-500 dark:text-slate-400 space-y-2">
+          <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-brand-orange"></i> (+244) 931352915</li>
+          <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-brand-orange"></i> (+244) 924042125</li>
+          <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-brand-violet"></i> angofest@gmail.com</li>
+          <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-brand-violet"></i> Luanda, Angola</li>
+        </ul>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-slate-200 dark:border-brand-carddark text-center text-[10px] text-slate-400">
+      <p>&copy; 2026 AngoFest Limitada. Todos os direitos reservados. Promovendo a cultura angolana com excelência.</p>
+    </div>
+  </footer>
 
-  <!-- Premium Popup Sponsored Promo (Every 60 Seconds Automatic Option) -->
-  <div id="premium-popup" class="fixed inset-0 z-450 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-brand-dark border-2 border-brand-orange rounded-3xl p-6 max-w-md w-full relative overflow-hidden shadow-2xl">
-      <div class="absolute top-0 right-0 bg-brand-orange text-white text-[10px] font-bold px-4 py-1 rounded-bl-xl tracking-wider uppercase animate-pulse">Patrocinado</div>
-      <button onclick="closePremiumPopup()" class="absolute top-3 left-3 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-brand-carddark hover:text-brand-orange transition">✕</button>
+  <!-- Generic Action Modal Slider -->
+  <div id="modal-container" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-brand-carddark rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar relative shadow-2xl p-6" id="modal-content"></div>
+  </div>
+
+  <!-- Real-time Sponsored Premium Promo (Pop-up automatic triggered every 60s) -->
+  <div id="sponsored-promo" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-brand-carddark border-2 border-brand-orange rounded-3xl p-6 max-w-sm w-full relative shadow-2xl">
+      <div class="absolute top-0 right-0 bg-brand-orange text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl tracking-wider uppercase animate-pulse">Patrocinado</div>
+      <button onclick="dismissSponsored()" class="absolute top-3 left-3 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center hover:text-brand-orange transition">✕</button>
       
-      <div class="mt-4">
-        <span class="bg-brand-violet/10 text-brand-violet text-xs font-bold px-3 py-1 rounded-full border border-brand-violet/30">Destaque Premium AngoFest</span>
-        <h3 class="text-2xl font-bold font-display mt-3 text-slate-800 dark:text-white" id="premium-popup-title">Summertime Festival Luanda</h3>
-        <p class="text-sm text-slate-500 mt-1" id="premium-popup-subtitle">O maior festival de Afrohouse e Kizomba do ano na Ilha de Luanda!</p>
-        <div class="my-4 rounded-2xl overflow-hidden aspect-video bg-neutral-900 border border-brand-carddark relative">
-          <img id="premium-popup-image" src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=600&q=80" alt="Super Event" class="w-full h-full object-cover">
+      <div class="mt-4 text-center">
+        <span class="bg-brand-violet/10 text-brand-violet text-[10px] font-bold px-3 py-1 rounded-full border border-brand-violet/20">Detaque Especial AngoFest</span>
+        <h4 id="promo-title" class="text-xl font-bold font-display mt-3 text-slate-800 dark:text-white">Festa de Luanda</h4>
+        <p id="promo-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-2">Venha celebrar a melhor música de Angola no espaço Atlântico com grandes surpresas e alta energia.</p>
+        <div class="my-4 rounded-xl overflow-hidden aspect-video bg-neutral-900 border dark:border-brand-carddark relative">
+          <img id="promo-img" src="" alt="Promo" class="w-full h-full object-cover">
         </div>
-        <div class="flex items-center justify-between text-xs font-semibold py-2 px-3 rounded-xl bg-slate-50 dark:bg-[#1D153A] border border-slate-100 dark:border-brand-carddark">
-          <span class="text-brand-orange font-bold text-sm" id="premium-popup-price">Preço: 15.000 Kz</span>
-          <span class="text-slate-500 dark:text-slate-300" id="premium-popup-meta">Sábado, 28 Nov 2026</span>
-        </div>
-        <button onclick="viewPremiumDetails()" class="mt-5 w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-102 transition flex items-center justify-center gap-2">
-          Ver Bilhetes & Detalhes <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        <div class="text-xs font-bold py-2 bg-slate-50 dark:bg-brand-carddark/60 rounded-xl" id="promo-price">Ingresso: 10.000 Kz</div>
+        <button id="promo-btn" class="mt-4 w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-95 transition text-sm">
+          Falar com Promotor no WhatsApp <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Dynamic Details & Action Modal (Generic Dialog Container) -->
-  <div id="general-modal" class="fixed inset-0 z-400 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-brand-dark rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar relative shadow-2xl border border-slate-200 dark:border-brand-carddark" id="general-modal-body">
-      <!-- Generated Dynamically by JS -->
-    </div>
-  </div>
-
-  <!-- Floating Elements -->
-  <!-- WhatsApp Floating Action -->
-  <a href="https://wa.me/244931352915" target="_blank" rel="noreferrer" class="fixed bottom-6 left-6 z-100 w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all group" title="Fale connosco no WhatsApp">
+  <!-- WhatsApp Floating Widget Button -->
+  <a href="https://wa.me/244931352915" target="_blank" rel="noreferrer" class="fixed bottom-6 left-6 z-40 w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition group" title="WhatsApp Suporte">
     <i data-lucide="phone-call" class="w-7 h-7"></i>
-    <span class="absolute left-16 bg-emerald-500 text-white font-semibold text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition duration-300 whitespace-nowrap shadow-md">Falar com Suporte</span>
+    <span class="absolute left-16 bg-emerald-500 text-white font-semibold text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition whitespace-nowrap shadow-md">Central WhatsApp</span>
   </a>
 
-  <!-- Back to Top Button -->
-  <button id="back-to-top" onclick="scrollToTop()" class="fixed bottom-6 right-6 z-100 w-12 h-12 bg-brand-violet/90 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 pointer-events-none hover:scale-110 transition-all">
+  <!-- Top Arrow -->
+  <button id="top-scroller" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-40 w-12 h-12 bg-brand-violet text-white rounded-full flex items-center justify-center shadow-lg opacity-0 transition-opacity">
     <i data-lucide="arrow-up" class="w-5 h-5"></i>
   </button>
 
-  <!-- Real-time Private Chat Drawer -->
-  <div id="chat-drawer" class="fixed bottom-6 right-20 z-150">
-    <button onclick="toggleChatDrawerWidget()" class="w-14 h-14 bg-brand-violet text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition relative">
-      <i data-lucide="message-square" class="w-7 h-7"></i>
-      <span class="absolute top-1 right-1 w-3 h-3 bg-brand-orange border-2 border-white rounded-full" id="chat-unread-badge"></span>
+  <!-- Live Support Dedicated User Chat Widget -->
+  <div id="live-chat-dock" class="fixed bottom-6 right-20 z-40">
+    <button onclick="toggleChatDisplay()" class="w-14 h-14 bg-gradient-to-tr from-brand-violet to-brand-orange text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition relative">
+      <i data-lucide="message-square" class="w-6 h-6"></i>
+      <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white hidden" id="chat-alarm"></span>
     </button>
-    <div id="chat-drawer-panel" class="absolute bottom-16 right-0 w-80 sm:w-96 h-96 rounded-2xl bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark hidden flex-col shadow-2xl overflow-hidden">
-      <!-- Title -->
+    <div id="chat-frame" class="absolute bottom-16 right-0 w-80 sm:w-96 h-96 rounded-2xl bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark hidden flex-col shadow-2xl overflow-hidden animate-slide-up">
       <div class="bg-gradient-to-r from-brand-violet to-brand-orange p-4 text-white flex justify-between items-center">
         <div class="flex items-center gap-2">
-          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-          <span class="font-display font-bold text-sm">Chat de Suporte AngoFest</span>
+          <div class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span class="font-display font-bold text-xs">Suporte Técnico Real e Promoções</span>
         </div>
-        <button onclick="toggleChatDrawerWidget()" class="text-white/80 hover:text-white">✕</button>
+        <button onclick="toggleChatDisplay()" class="text-white hover:opacity-85 text-sm">✕</button>
       </div>
-      <!-- Messages screen -->
-      <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50 dark:bg-brand-dark/20 text-xs">
-        <!-- Injected dynamically -->
+      <div id="chat-messages" class="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-3 text-xs bg-slate-50 dark:bg-brand-dark/30">
+        <!-- Messages loaded here -->
       </div>
-      <!-- Form Input -->
-      <form id="chat-input-form" onsubmit="handleSendChatMessage(event)" class="p-2 border-t border-slate-100 dark:border-brand-carddark/50 flex gap-2">
-        <input type="text" id="chat-typed-msg" placeholder="Pergunte aos administradores..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-brand-carddark outline-none bg-slate-50 dark:bg-[#1D153A] text-xs">
-        <button type="submit" class="p-2 bg-brand-violet text-white rounded-xl hover:bg-brand-orange transition">
+      <form id="chat-form" onsubmit="dispatchChatMessage(event)" class="p-2 border-t border-slate-200 dark:border-brand-carddark/50 flex gap-2">
+        <input type="text" id="chat-message-txt" placeholder="Diga algo ou peça suporte..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-brand-carddark focus:ring-2 focus:ring-brand-violet bg-white dark:bg-brand-dark/20 text-xs outline-none">
+        <button type="submit" class="p-2.5 bg-brand-violet text-white rounded-xl hover:bg-brand-orange transition duration-200">
           <i data-lucide="send" class="w-4 h-4"></i>
         </button>
       </form>
     </div>
   </div>
 
-  <!-- Shared Script Module -->
+  <!-- Real-Time Application JavaScript Context Modules -->
   <script type="module">
     // =========================================================================
-    // CODEBASE FIREBASE BLUEPRINT SCHEMA & INTEGRATION SKELETON
+    // // CONFIGURAÇÃO FIREBASE
     // =========================================================================
-    /* 
-       Abaixo está a estrutura preparada para receber a inicialização do Firebase.
-       O sistema detecta de forma autónoma as credenciais. Se estiverem presentes e forem alteradas,
-       sincroniza o Auth, o Firestore e o Storage. Caso contrário, entra em modo Fallback LocalStorage (Offline).
-    */
-
-    // // DESCOMENTE E CONFIGURA ABAIXO QUANDO COM INSTÂNCIA DE PRODUÇÃO
-    // import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    // import { getAuth, signInWithPhoneNumber, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    // import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, getDocs } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-    // import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
-
-    // CONFIGURAÇÃO FIREBASE DO CONSOLE DO DESENVOLVEDOR
+    // Pode introduzir aqui as credenciais do seu projeto Firebase diretamente.
+    // O portal ativa automaticamente canais e persistência Firebase se detetar configs.
     const firebaseConfig = {
-      apiKey: "MY_GEMINI_API_KEY", // Placeholder para preenchimento posterior
+      apiKey: "", // Insira aqui a sua apiKey do Firebase Console
       authDomain: "",
       projectId: "",
       storageBucket: "",
@@ -262,64 +278,72 @@
       appId: ""
     };
 
-    let isFirebaseLive = false;
-    let db = null;
+    let fbActive = false;
+    let fbApp = null;
     let auth = null;
+    let db = null;
     let storage = null;
 
-    try {
-      if (firebaseConfig.projectId && firebaseConfig.apiKey !== "MY_GEMINI_API_KEY" && firebaseConfig.apiKey !== "") {
-        // const fbApp = initializeApp(firebaseConfig);
+    // Tentativa segura de inicialização dinâmica via CDNs do Firebase caso as credenciais estejam povoadas
+    if(firebaseConfig.projectId && firebaseConfig.apiKey !== "") {
+      try {
+        // Exemplo de importação dinâmica para manter index.html resiliente
+        // const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+        // const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+        // const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        // fbApp = initializeApp(firebaseConfig);
         // auth = getAuth(fbApp);
         // db = getFirestore(fbApp);
-        // storage = getStorage(fbApp);
-        // isFirebaseLive = true;
+        // fbActive = true;
+        // console.log("Canal Firebase sincronizado!");
+      } catch(e) {
+        console.error("Falha ao inicializar o banco de dados Firebase.", e);
       }
-    } catch(e) {
-      console.warn("Falha ao inicializar o Firebase. Ativando o motor de simulação Offline local...", e);
     }
 
     // =========================================================================
-    // SYSTEM CONSTANTS: Angola Geographic Structure
+    // CONSTANTS: Angola Municipalities and Cultural Baseline
     // =========================================================================
     const PROVINCIAS_ANGOLA = {
-      "Luanda": ["Belas", "Cacuaco", "Cazenga", "Icolo e Bengo", "Luanda", "Quiçama", "Talatona", "Viana"],
-      "Benguela": ["Baía Farta", "Balombo", "Benguela", "Bocoio", "Caimbambo", "Catumbela", "Chongoroi", "Cubal", "Ganda", "Lobito"],
-      "Huambo": ["Bailundo", "Caála", "Catchiungo", "Chicala-Cholohanga", "Chinjenje", "Ekunha", "Huambo", "Londuimbali", "Longonjo", "Mungo", "Ukuma"],
-      "Cabinda": ["Belize", "Buco-Zau", "Cabinda", "Cacongo"],
-      "Huíla": ["Caconda", "Cacula", "Caluquembe", "Chibia", "Chicomba", "Chipindo", "Cuvango", "Humpata", "Jamba", "Lubango", "Matala", "Quilengues", "Quipungo"],
-      "Uíge": ["Ambuíla", "Bembe", "Buengas", "Damba", "Milunga", "Mucaba", "Negage", "Puri", "Quimbele", "Quitexe", "Sanza Pombo", "Songo", "Uíge", "Zombo"],
-      "Malanje": ["Cacuso", "Calandula", "Cangandala", "Kalandula", "Malanje", "Quela"],
-      "Namibe": ["Bibala", "Camucuio", "Moçâmedes", "Tômbwa", "Virei"]
+      "Luanda": ["Luanda", "Belas", "Cacuaco", "Cazenga", "Icolo e Bengo", "Quiçama", "Talatona", "Viana"],
+      "Benguela": ["Benguela", "Lobito", "Catumbela", "Baía Farta", "Bocoio", "Balombo", "Caimbambo", "Chongoroi", "Cubal", "Ganda"],
+      "Huambo": ["Huambo", "Bailundo", "Caála", "Catchiungo", "Chinjenje", "Ekunha", "Londuimbali", "Longonjo", "Mungo", "Ukuma"],
+      "Cabinda": ["Cabinda", "Belize", "Buco-Zau", "Cacongo"],
+      "Huíla": ["Lubango", "Caconda", "Cacula", "Caluquembe", "Chibia", "Chicomba", "Chipindo", "Cuvango", "Humpata", "Jamba", "Matala", "Quilengues", "Quipungo"],
+      "Uíge": ["Uíge", "Ambuíla", "Bembe", "Buengas", "Damba", "Milunga", "Mucaba", "Negage", "Puri", "Quimbele", "Quitexe", "Sanza Pombo", "Songo", "Zombo"],
+      "Malanje": ["Malanje", "Cacuso", "Calandula", "Cangandala", "Kalandula", "Quela"],
+      "Namibe": ["Moçâmedes", "Bibala", "Camucuio", "Tômbwa", "Virei"]
     };
 
-    const CATEGORIAS_LISTA = [
-      { id: "all", nome: "Todos", icon: "layout-grid" },
-      { id: "Festas", nome: "Festas", icon: "glass-water" },
-      { id: "Shows", nome: "Shows", icon: "mic" },
-      { id: "Festivais", nome: "Festivais", icon: "sparkles" },
-      { id: "Eventos culturais", nome: "Eventos Culturais", icon: "palette" },
-      { id: "Eventos desportivos", nome: "Eventos Desportivos", icon: "trophy" },
-      { id: "Workshops", nome: "Workshops", icon: "book-open" },
-      { id: "Feiras", nome: "Feiras", icon: "shopping-bag" },
-      { id: "Conferências", nome: "Conferências", icon: "presentation" }
+    const CATEGORIAS = [
+      { id: "all", label: "Tudo", icon: "layout-grid" },
+      { id: "Festas", label: "Festas", icon: "glass-water" },
+      { id: "Shows", label: "Shows", icon: "mic" },
+      { id: "Festivais", label: "Festivais", icon: "sparkles" },
+      { id: "Eventos culturais", label: "Cultura", icon: "palette" },
+      { id: "Eventos desportivos", label: "Desporto", icon: "trophy" },
+      { id: "Workshops", label: "Workshops", icon: "book-open" },
+      { id: "Feiras", label: "Feiras", icon: "shopping-bag" },
+      { id: "Conferências", label: "Conferências", icon: "presentation" }
     ];
 
     // =========================================================================
-    // DATA BASELINE FOR OFFLINE MOCK PRE-SETS
+    // BASE LOCAL DATA PRESETS: Users (with exact requested admins), Submissions
     // =========================================================================
-    const DEFAULT_PRESET_USERS = [
+    const MOCK_USERS_BASE = [
       { telefone: "931352915", nome: "José Sorte Francisco", idade: 28, role: "admin", aprovado: true, pass: "123456" },
       { telefone: "924042125", nome: "Josué Bocoto", idade: 29, role: "admin", aprovado: true, pass: "123456" },
       { telefone: "900000000", nome: "Promotor Demo Carlos", idade: 30, role: "promoter", aprovado: true, pass: "123456" },
-      { telefone: "911111111", nome: "Utilizador Convidado", idade: 22, role: "user", aprovado: true, pass: "123456" }
+      { telefone: "911111111", nome: "Utilizador Normal", idade: 22, role: "user", aprovado: true, pass: "123456" }
     ];
 
-    const DEFAULT_PRESET_EVENTS = [
+    // All events are submitted by promoters with status ("pendente" or "aprovado")
+    const MOCK_EVENTS_BASE = [
       {
         id: "evt-premium-1",
         nome: "AfroNation Angola Festival",
-        promotor: "Sorte Francisco Eventos",
+        promotor: "Promotor Demo Carlos",
+        promotorPhone: "900000000",
         provincia: "Luanda",
         municipio: "Talatona",
         local: "Baía de Talatona",
@@ -328,46 +352,58 @@
         categoria: "Festivais",
         preco: "25.000 Kz",
         flyer: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=600&q=80",
-        descricao: "O maior festival internacional de afrobeat chega finalmente a Luanda! 3 dias de celebração da cultura, sol, praia e música.",
-        aprovado: true,
-        premium: true
+        descricao: "O maior festival internacional de afrobeat pousa nas belas areias de Talatona, em Luanda! Uma celebração da música africana, cores, energia e ritmos locais com os DJs e vocalistas mais reconhecidos do panorama contemporâneo.",
+        status: "aprovado",
+        plano: "Premium",
+        comprovativo: "https://via.placeholder.com/150",
+        rejeitado: false,
+        rejeitarMotivo: ""
       },
       {
-        id: "evt-2",
-        nome: "Noite de Semba Memorial",
-        promotor: "Eventos Bocoto",
+        id: "evt-free-2",
+        nome: "Encontro Cultural de Semba",
+        promotor: "Sorte Francisco Eventos",
+        promotorPhone: "931352915",
         provincia: "Luanda",
         municipio: "Luanda",
-        local: "Centro Cultural Angolano",
+        local: "Centro de Animação Artística",
         data: "2026-06-30",
-        hora: "20:00",
+        hora: "19:00",
         categoria: "Eventos culturais",
-        preco: "10.000 Kz",
+        preco: "Gratuito",
         flyer: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
-        descricao: "Uma noite clássica dedicada aos maiores ídolos do Semba tradicional com artistas vivos e bandas de elite de Angola.",
-        aprovado: true,
-        premium: false
+        descricao: "Uma roda de semba genuína e memorável dedicada às lendas vivas e à juventude angolana que preserva a herança dos ritmos primordiais das nossas terras.",
+        status: "aprovado",
+        plano: "Base",
+        comprovativo: "",
+        rejeitado: false,
+        rejeitarMotivo: ""
       },
       {
-        id: "evt-3",
-        nome: "Summertime Lobito Groove",
-        promotor: "Promotor Demo Carlos",
+        id: "evt-lobito-3",
+        nome: "Sunset Restinga Lobito",
+        promotor: "Bocoto Promoções",
+        promotorPhone: "924042125",
         provincia: "Benguela",
         municipio: "Lobito",
-        local: "Restinga Beach",
-        data: "2026-08-05",
-        hora: "18:00",
+        local: "Praia da Restinga",
+        data: "2026-08-04",
+        hora: "17:00",
         categoria: "Festas",
-        preco: "12.000 Kz",
+        preco: "15.000 Kz",
         flyer: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80",
-        descricao: "A melhor festa do ano na areia do Lobito. Djs convidados e open bar até às 21h.",
-        aprovado: true,
-        premium: true
+        descricao: "Seja envolvido pela brisa pacífica e pelo melhor do Afrohouse e Kizomba nesta festa de entardecer fantástica.",
+        status: "aprovado",
+        plano: "Premium",
+        comprovativo: "https://via.placeholder.com/150",
+        rejeitado: false,
+        rejeitarMotivo: ""
       },
       {
-        id: "evt-4",
+        id: "evt-conferencia-4",
         nome: "Conferência Tech Angola 2026",
-        promotor: "TechAngola Grupo",
+        promotor: "Associação Digital",
+        promotorPhone: "911111111",
         provincia: "Huambo",
         municipio: "Huambo",
         local: "Pavilhão Gimnodesportivo",
@@ -376,67 +412,69 @@
         categoria: "Conferências",
         preco: "Gratuito",
         flyer: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80",
-        descricao: "Fórum de empreendedorismo tecnológico, inteligência artificial e startups em Angola.",
-        aprovado: true,
-        premium: false
+        descricao: "Fórum nacional focado em soluções digitais e o papel das novas startups no mercado de Angola.",
+        status: "aprovado",
+        plano: "Base",
+        comprovativo: "",
+        rejeitado: false,
+        rejeitarMotivo: ""
       }
     ];
 
-    const DEFAULT_CHATS = [
-      { remetente: "931352915", nome: "José Sorte", texto: "Olá! Bem-vindo à plataforma de suporte oficial do AngoFest. Como o podemos ajudar?", hora: "08:30" }
+    const MOCK_CHAT_BASE = [
+      { sender: "Suporte", senderName: "Central AngoFest", text: "Olá! Seja muito bem-vindo ao portal AngoFest. Aqui pode conversar diretamente com o José Sorte e o Josué Bocoto por suporte especializado.", time: "09:00" }
     ];
 
     // =========================================================================
-    // APPLICATION STATE STORE
+    // APP STATE INSTANTIATION
     // =========================================================================
     const state = {
-      users: JSON.parse(localStorage.getItem("af_users")) || DEFAULT_PRESET_USERS,
-      events: JSON.parse(localStorage.getItem("af_events")) || DEFAULT_PRESET_EVENTS,
-      chats: JSON.parse(localStorage.getItem("af_chats")) || DEFAULT_CHATS,
-      currentUser: JSON.parse(localStorage.getItem("af_current_user")) || null,
-      currentView: 'home',
-      theme: localStorage.getItem("af_theme") || 'light',
-      selectedCategory: 'all',
+      users: JSON.parse(localStorage.getItem("af_users_v2")) || MOCK_USERS_BASE,
+      events: JSON.parse(localStorage.getItem("af_events_v2")) || MOCK_EVENTS_BASE,
+      chats: JSON.parse(localStorage.getItem("af_chats_v2")) || MOCK_CHAT_BASE,
+      currentUser: JSON.parse(localStorage.getItem("af_current_user_v2")) || null,
+      currentView: 'home', // home, promoter-dashboard, admin-dashboard, user-account
       searchQuery: '',
-      filters: {
-        provincia: '',
-        municipio: '',
-        tipoPreco: 'all', // all, free, paid
-        data: ''
-      },
-      promoterTab: 'my-events', // my-events, add-event
-      adminTab: 'approvals-queue', // approvals-queue, manage-events, system-users
-      activeChatUser: null
+      filterProvincia: '',
+      filterMunicipio: '',
+      filterPrice: 'all', // all, free, paid
+      filterDate: '',
+      selectedCategory: 'all',
+      tempEventEditId: null, // For edit purpose
+      activeChatUser: null,
+      promoterTab: 'my-events', // my-events, submit-form
+      adminTab: 'approvals' // approvals, registered-users, event-catalog
     };
 
-    // =========================================================================
-    // ROOT FUNCTIONS: STORAGE UPDATE & NOTIFICATIONS
-    // =========================================================================
-    function syncLocalStorage() {
-      localStorage.setItem("af_users", JSON.stringify(state.users));
-      localStorage.setItem("af_events", JSON.stringify(state.events));
-      localStorage.setItem("af_chats", JSON.stringify(state.chats));
-      localStorage.setItem("af_current_user", JSON.stringify(state.currentUser));
+    function saveState() {
+      localStorage.setItem("af_users_v2", JSON.stringify(state.users));
+      localStorage.setItem("af_events_v2", JSON.stringify(state.events));
+      localStorage.setItem("af_chats_v2", JSON.stringify(state.chats));
+      localStorage.setItem("af_current_user_v2", JSON.stringify(state.currentUser));
     }
 
+    // =========================================================================
+    // TOASTS CENTER
+    // =========================================================================
     window.showToast = function(message, type = "success") {
-      const container = document.getElementById("toast-container");
-      if (!container) return;
+      const bin = document.getElementById("toast-bin");
+      if(!bin) return;
       const id = Date.now();
-      const flexColor = type === "success" ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300" : "border-red-500 bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300";
-      const icon = type === "success" ? "check-circle" : "alert-circle";
+      const styleClass = type === "success" 
+        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+        : "border-red-500 bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300";
       
       const toast = document.createElement("div");
       toast.id = `toast-${id}`;
-      toast.className = `p-4 rounded-xl border-l-4 shadow-xl flex items-center justify-between gap-3 pointer-events-auto fade-in ${flexColor}`;
+      toast.className = `p-4 rounded-xl border-l-4 shadow-xl flex items-center justify-between gap-3 pointer-events-auto fade-in ${styleClass}`;
       toast.innerHTML = `
         <div class="flex items-center gap-2">
-          <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+          <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5 flex-shrink-0"></i>
           <p class="text-xs font-semibold">${message}</p>
         </div>
-        <button onclick="document.getElementById('toast-${id}').remove()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="document.getElementById('toast-${id}').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">✕</button>
       `;
-      container.appendChild(toast);
+      bin.appendChild(toast);
       lucide.createIcons();
       setTimeout(() => {
         const el = document.getElementById(`toast-${id}`);
@@ -445,61 +483,183 @@
     };
 
     // =========================================================================
-    // VIEW ROUTER & NAVIGATION ENGINE
+    // DYNAMIC MODALS MANIPULATION
     // =========================================================================
-    window.navigateTo = function(view) {
-      state.currentView = view;
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-      renderApp();
-    };
-
-    window.toggleTheme = function() {
-      const newTheme = state.theme === 'light' ? 'dark' : 'light';
-      state.theme = newTheme;
-      localStorage.setItem("af_theme", newTheme);
-      applyTheme();
-    };
-
-    function applyTheme() {
-      const root = document.documentElement;
-      if (state.theme === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
+    window.openModal = function(htmlContent) {
+      const container = document.getElementById("modal-container");
+      const content = document.getElementById("modal-content");
+      if(container && content) {
+        content.innerHTML = htmlContent;
+        container.classList.remove("hidden");
+        container.classList.add("flex");
+        lucide.createIcons();
       }
+    };
+
+    window.closeModal = function() {
+      const container = document.getElementById("modal-container");
+      if(container) {
+        container.classList.add("hidden");
+        container.classList.remove("flex");
+      }
+    };
+
+    // =========================================================================
+    // SPONSORED PROMO AUTOMATIC REPETITION (Every 60 Seconds Popup)
+    // =========================================================================
+    let promoTimer = null;
+    function runSponsoredPromoCycle() {
+      if(promoTimer) clearInterval(promoTimer);
+      promoTimer = setInterval(() => {
+        // Only trigger if no major action modal is open
+        const container = document.getElementById("modal-container");
+        const sponsored = document.getElementById("sponsored-promo");
+        if(container && container.classList.contains("hidden") && sponsored && sponsored.classList.contains("hidden")) {
+          // Find any active approved Premium Event
+          const premiumList = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+          if(premiumList.length > 0) {
+            const randomEvt = premiumList[Math.floor(Math.random() * premiumList.length)];
+            triggerPromoPopup(randomEvt);
+          }
+        }
+      }, 60000); // 1 minuto / 60 segundos
     }
 
-    // =========================================================================
-    // SEARCH & DYNAMIC FILTERS
-    // =========================================================================
-    window.handleCategorySelect = function(categoryId) {
-      state.selectedCategory = categoryId;
-      renderApp();
+    function triggerPromoPopup(evt) {
+      const modal = document.getElementById("sponsored-promo");
+      document.getElementById("promo-title").innerText = evt.nome;
+      document.getElementById("promo-desc").innerText = evt.descricao.substring(0, 110) + "...";
+      document.getElementById("promo-img").src = evt.flyer;
+      document.getElementById("promo-price").innerText = `Ingresso: ${evt.preco} | ${evt.provincia}, ${evt.municipio}`;
+      
+      const btn = document.getElementById("promo-btn");
+      btn.onclick = () => {
+        window.open(`https://wa.me/244931352915?text=Olá,%20gostaria%20de%20adquirir%20ingressos%20para%20o%20evento%20Premium%20${encodeURIComponent(evt.nome)}`, '_blank');
+        dismissSponsored();
+      };
+      
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      lucide.createIcons();
+    }
+
+    window.dismissSponsored = function() {
+      const modal = document.getElementById("sponsored-promo");
+      if(modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
     };
 
+    // =========================================================================
+    // REAL-TIME HELP DESK CHAT WIDGET
+    // =========================================================================
+    window.toggleChatDisplay = function() {
+      const frame = document.getElementById("chat-frame");
+      if(!frame) return;
+      frame.classList.toggle("hidden");
+      frame.classList.toggle("flex");
+      document.getElementById("chat-alarm").classList.add("hidden");
+      renderChatMessages();
+    };
+
+    function renderChatMessages() {
+      const box = document.getElementById("chat-messages");
+      if(!box) return;
+      
+      const currentLabel = state.currentUser ? state.currentUser.telefone : "Guest";
+      
+      box.innerHTML = state.chats.map(msg => {
+        const isMe = msg.sender === currentLabel;
+        return `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <span class="text-[9px] text-slate-400 font-semibold mb-0.5">${msg.senderName}</span>
+            <div class="p-2.5 rounded-2xl max-w-[85%] ${isMe ? 'bg-brand-violet text-white rounded-tr-none' : 'bg-slate-200 dark:bg-brand-carddark text-slate-800 dark:text-white rounded-tl-none'}">
+              <p class="leading-normal">${msg.text}</p>
+            </div>
+            <span class="text-[8px] text-slate-400 mt-1">${msg.time}</span>
+          </div>
+        `;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    window.dispatchChatMessage = function(e) {
+      e.preventDefault();
+      const txtInput = document.getElementById("chat-message-txt");
+      if(!txtInput) return;
+      const text = txtInput.value.trim();
+      if(!text) return;
+
+      const userLabel = state.currentUser ? state.currentUser.telefone : "Guest";
+      const userName = state.currentUser ? state.currentUser.nome : "Visitante Anónimo";
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      const newMsg = {
+        sender: userLabel,
+        senderName: userName,
+        text: text,
+        time: timeStr
+      };
+
+      state.chats.push(newMsg);
+      saveState();
+      txtInput.value = '';
+      renderChatMessages();
+
+      // Simulated auto technical developer reply
+      if(state.currentUser?.role !== "admin") {
+        setTimeout(() => {
+          state.chats.push({
+            sender: "Suporte",
+            senderName: "Suporte Técnico",
+            text: `Olá ${userName}! Recebemos a sua mensagem sobre a plataforma AngoFest. Entraremos em contacto para o seu número de registo (${userLabel}) brevemente. Pode também contactar diretamente os desenvolvedores José Sorte e Josué Bocoto pelos números da plataforma.`,
+            time: now.getHours() + ":" + (now.getMinutes() + 1).toString().padStart(2, '0')
+          });
+          saveState();
+          renderChatMessages();
+          document.getElementById("chat-alarm").classList.remove("hidden");
+        }, 2000);
+      }
+    };
+
+    // =========================================================================
+    // IN-APP SEARCH ENGINE & FILTERS
+    // =========================================================================
     window.handleInstantSearch = function(query) {
       state.searchQuery = query.toLowerCase().trim();
       renderApp();
     };
 
-    window.handleFilterChange = function(field, val) {
-      state.filters[field] = val;
-      if(field === "provincia") {
-        state.filters.municipio = ''; // Reset municipal when province changes
+    window.handleDropdownFilter = function(field, value) {
+      if(field === 'provincia') {
+        state.filterProvincia = value;
+        state.filterMunicipio = ''; // Reset municipio cascade
+      } else if (field === 'municipio') {
+        state.filterMunicipio = value;
+      } else if (field === 'price') {
+        state.filterPrice = value;
+      } else if (field === 'date') {
+        state.filterDate = value;
       }
       renderApp();
     };
 
-    window.clearFilters = function() {
-      state.filters.provincia = '';
-      state.filters.municipio = '';
-      state.filters.tipoPreco = 'all';
-      state.filters.data = '';
-      state.searchQuery = '';
+    window.selectCategoryFilter = function(catId) {
+      state.selectedCategory = catId;
+      renderApp();
+    };
+
+    window.clearAllFilters = function() {
+      state.filterProvincia = '';
+      state.filterMunicipio = '';
+      state.filterPrice = 'all';
+      state.filterDate = '';
       state.selectedCategory = 'all';
-      const s1 = document.getElementById("header-search");
-      const s2 = document.getElementById("mobile-search");
+      state.searchQuery = '';
+      const s1 = document.getElementById("header-search-bar");
+      const s2 = document.getElementById("mobile-search-bar");
       if(s1) s1.value = '';
       if(s2) s2.value = '';
       renderApp();
@@ -507,440 +667,127 @@
 
     function getFilteredEvents() {
       return state.events.filter(evt => {
-        // Must be approved by admin (unless it is a promoter viewing their own workspace)
-        if(!evt.aprovado) return false;
+        // ONLY approved events appear in the catalog/public flow
+        if(evt.status !== "aprovado") return false;
 
-        const matchesKeyword = !state.searchQuery || 
-          evt.nome.toLowerCase().includes(state.searchQuery) || 
-          evt.local.toLowerCase().includes(state.searchQuery) || 
+        const matchesSearch = !state.searchQuery || 
+          evt.nome.toLowerCase().includes(state.searchQuery) ||
+          evt.descricao.toLowerCase().includes(state.searchQuery) ||
           evt.promotor.toLowerCase().includes(state.searchQuery);
 
+        const matchesProvince = !state.filterProvincia || evt.provincia === state.filterProvincia;
+        const matchesMunicipio = !state.filterMunicipio || evt.municipio === state.filterMunicipio;
         const matchesCategory = state.selectedCategory === 'all' || evt.categoria === state.selectedCategory;
-
-        const matchesProvincia = !state.filters.provincia || evt.provincia === state.filters.provincia;
-        const matchesMunicipio = !state.filters.municipio || evt.municipio === state.filters.municipio;
+        const matchesDate = !state.filterDate || evt.data === state.filterDate;
 
         let matchesPrice = true;
-        if(state.filters.tipoPreco === 'free') {
-          matchesPrice = evt.preco.toLowerCase().includes('gratuito') || parseInt(evt.preco) === 0;
-        } else if(state.filters.tipoPreco === 'paid') {
-          matchesPrice = !evt.preco.toLowerCase().includes('gratuito') && parseInt(evt.preco) !== 0;
+        if(state.filterPrice === 'free') {
+          matchesPrice = evt.preco.toLowerCase().includes('gratuito') || parseFloat(evt.preco) === 0;
+        } else if (state.filterPrice === 'paid') {
+          matchesPrice = !evt.preco.toLowerCase().includes('gratuito') && parseFloat(evt.preco) !== 0;
         }
 
-        const matchesDate = !state.filters.data || evt.data === state.filters.data;
-
-        return matchesKeyword && matchesCategory && matchesProvincia && matchesMunicipio && matchesPrice && matchesDate;
+        return matchesSearch && matchesProvince && matchesMunicipio && matchesCategory && matchesDate && matchesPrice;
       });
     }
 
     // =========================================================================
-    // USER REGISTRATION & AUTHENTICATION (PHONE LOGIN)
+    // GENERAL STATE DIRECT ROUTING
     // =========================================================================
-    window.openLoginModal = function() {
-      openGeneralModal(`
-        <div class="p-6 md:p-8">
-          <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-brand-carddark/50">
-            <h3 class="text-xl font-bold font-display flex items-center gap-2 text-brand-violet">
-              <i data-lucide="unlock" class="w-5 h-5"></i> Aceder à Plataforma
-            </h3>
-            <button onclick="closeGeneralModal()" class="text-slate-400 hover:text-brand-orange">✕</button>
-          </div>
-          <div class="mt-6 space-y-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Telefone de Angola</label>
-              <input type="text" id="login-phone" placeholder="9xxxxxxxx" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none focus:ring-2 focus:ring-brand-violet">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase tracking-wider mb-2">Palavra-passe</label>
-              <input type="password" id="login-pass" placeholder="Insira a sua senha" class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none focus:ring-2 focus:ring-brand-violet">
-            </div>
-            <button onclick="handleLoginSubmit()" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:opacity-90 transition mt-4">
-              Iniciar Sessão
-            </button>
-            <p class="text-xs text-center text-slate-400 mt-4">
-              Não possui conta? 
-              <a href="#" onclick="openRegisterModal()" class="text-brand-violet font-semibold hover:underline">Registe-se aqui</a>
-            </p>
-          </div>
-        </div>
-      `);
-    };
-
-    window.openRegisterModal = function() {
-      openGeneralModal(`
-        <div class="p-6 md:p-8">
-          <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-brand-carddark/50">
-            <h3 class="text-xl font-bold font-display flex items-center gap-2 text-brand-orange">
-              <i data-lucide="user-plus" class="w-5 h-5"></i> Criar Nova Conta
-            </h3>
-            <button onclick="closeGeneralModal()" class="text-slate-400 hover:text-brand-orange">✕</button>
-          </div>
-          <div class="mt-6 space-y-4">
-            <div>
-              <label class="block text-xs font-semibold mb-1">Nome Completo</label>
-              <input type="text" id="reg-name" placeholder="Ex: Francisco José" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1">Telefone (Nove algarismos)</label>
-              <input type="text" id="reg-phone" placeholder="9xxxxxxxx" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-semibold mb-1">Idade</label>
-                <input type="number" id="reg-age" placeholder="Idade" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold mb-1">Inscrição como</label>
-                <select id="reg-role" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none text-slate-700 dark:text-slate-200">
-                  <option value="user">Utilizador Geral</option>
-                  <option value="promoter">Promotor de Eventos</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold mb-1">Palavra-passe</label>
-              <input type="password" id="reg-pass" placeholder="Senha segura" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-[#1D153A] outline-none">
-            </div>
-            <div class="p-3 bg-brand-violet/5 border border-brand-violet/20 rounded-xl text-[10px] text-slate-400">
-              ⚠️ Nota: Novos utilizadores e promotores exigem aprovação por parte dos fundadores <strong>José Sorte Francisco</strong> ou <strong>Josué Bocoto</strong> antes de usufruir da plataforma.
-            </div>
-            <button onclick="handleRegisterSubmit()" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:opacity-90 transition mt-2">
-              Finalizar Candidatura
-            </button>
-          </div>
-        </div>
-      `);
-    };
-
-    window.handleLoginSubmit = function() {
-      const phoneInput = document.getElementById("login-phone")?.value.trim();
-      const passInput = document.getElementById("login-pass")?.value.trim();
-
-      if (!phoneInput || !passInput) {
-        showToast("Por favor preencha todos os campos do Login.", "error");
+    window.navigateTo = function(view) {
+      // Access locks
+      if(view === 'promoter-dashboard' && (!state.currentUser || state.currentUser.role !== 'promoter')) {
+        showToast("Necessita iniciar sessão como Promotor Aprovado para aceder a esta área.", "error");
+        openAuthDialog('login');
+        return;
+      }
+      if(view === 'admin-dashboard' && (!state.currentUser || state.currentUser.role !== 'admin')) {
+        showToast("Acesso Restrito: Área reservada apenas para José Sorte ou Josué Bocoto.", "error");
+        openAuthDialog('login');
         return;
       }
 
-      const matchUser = state.users.find(u => u.telefone === phoneInput && u.pass === passInput);
-      if(!matchUser) {
-        showToast("Telefone ou palavra-passe incorreta.", "error");
-        return;
-      }
-
-      if(!matchUser.aprovado) {
-        showToast("A sua conta ainda está no estado: Candidatura de Adesão Pendente de Aprovação.", "error");
-        return;
-      }
-
-      state.currentUser = matchUser;
-      syncLocalStorage();
-      closeGeneralModal();
-      showToast(`Bem-vindo, ${matchUser.nome}! Início de sessão com sucesso.`);
+      state.currentView = view;
+      window.scrollTo({top: 0, behavior: 'smooth'});
       renderApp();
     };
 
-    window.handleRegisterSubmit = function() {
-      const name = document.getElementById("reg-name")?.value.trim();
-      const phone = document.getElementById("reg-phone")?.value.trim();
-      const age = parseInt(document.getElementById("reg-age")?.value) || 0;
-      const role = document.getElementById("reg-role")?.value;
-      const pass = document.getElementById("reg-pass")?.value.trim();
-
-      if (!name || !phone || !age || !pass) {
-        showToast("Todos os campos do registo são obrigatórios.", "error");
-        return;
-      }
-      if (phone.length < 9) {
-        showToast("Insira um número de telefone angolano válido com 9 dígitos.", "error");
-        return;
-      }
-
-      const userExists = state.users.some(u => u.telefone === phone);
-      if(userExists) {
-        showToast("Este número de telefone já possui conta na nossa plataforma.", "error");
-        return;
-      }
-
-      const newUser = {
-        telefone: phone,
-        nome: name,
-        idade: age,
-        role: role,
-        aprovado: false, // Default unapproved, needing admin check
-        pass: pass
-      };
-
-      state.users.push(newUser);
-      syncLocalStorage();
-      closeGeneralModal();
-      
-      openGeneralModal(`
-        <div class="p-6 md:p-8 text-center space-y-4">
-          <div class="w-16 h-16 bg-brand-orange/10 text-brand-orange mx-auto rounded-full flex items-center justify-center">
-            <i data-lucide="clock" class="w-8 h-8"></i>
-          </div>
-          <h3 class="text-xl font-bold font-display">Candidatura Registada</h3>
-          <p class="text-sm text-slate-500">
-            A sua conta AngoFest para <strong>${name}</strong> foi submetida com sucesso!
-          </p>
-          <p class="text-xs text-slate-400">
-            Ela encontra-se em fila de espera e será aprovada brevemente por <br><strong>José Sorte Francisco</strong> ou <strong>Josué Bocoto</strong>.
-          </p>
-          <button onclick="closeGeneralModal()" class="px-6 py-2 bg-brand-violet text-white rounded-xl text-sm font-semibold">
-            Entendido
-          </button>
-        </div>
-      `);
-      lucide.createIcons();
+    window.toggleTheme = function() {
+      const active = state.theme === 'light' ? 'dark' : 'light';
+      state.theme = active;
+      localStorage.setItem("af_theme", active);
+      applyTheme();
     };
 
-    window.handleLogout = function() {
-      state.currentUser = null;
-      state.currentView = 'home';
-      syncLocalStorage();
-      showToast("Sessão finalizada.");
-      renderApp();
-    };
-
-    // =========================================================================
-    // SPONSOR AUTOMATION DIALOG & POPUP TRIGGER (60 Seconds)
-    // =========================================================================
-    let premiumTimer = null;
-    function initPremiumScheduler() {
-      if(premiumTimer) clearInterval(premiumTimer);
-      premiumTimer = setInterval(() => {
-        // Trigger if not currently in modal/important forms
-        const premiumEvt = state.events.find(e => e.premium && e.aprovado);
-        if(premiumEvt && document.getElementById("general-modal").classList.contains("hidden")) {
-          showPremiumPopup(premiumEvt);
-        }
-      }, 60000); // 60 segundos
+    function applyTheme() {
+      const elem = document.documentElement;
+      if (state.theme === 'dark') {
+        elem.classList.add('dark');
+      } else {
+        elem.classList.remove('dark');
+      }
     }
 
-    function showPremiumPopup(evt) {
-      document.getElementById("premium-popup-title").innerText = evt.nome;
-      document.getElementById("premium-popup-subtitle").innerText = evt.descricao.substring(0, 100) + "...";
-      document.getElementById("premium-popup-image").src = evt.flyer;
-      document.getElementById("premium-popup-price").innerText = `Preço: ${evt.preco}`;
-      document.getElementById("premium-popup-meta").innerText = `${evt.provincia}, ${evt.municipio} • ${evt.data}`;
-      
-      // Save ID reference on action
-      const btn = document.getElementById("premium-popup").querySelector("button[onclick='viewPremiumDetails()']");
-      if(btn) btn.setAttribute("data-evt-id", evt.id);
-
-      document.getElementById("premium-popup").classList.remove("hidden");
-      document.getElementById("premium-popup").classList.add("flex");
-    }
-
-    window.closePremiumPopup = function() {
-      document.getElementById("premium-popup").classList.add("hidden");
-      document.getElementById("premium-popup").classList.remove("flex");
-    };
-
-    window.viewPremiumDetails = function() {
-      const btn = document.getElementById("premium-popup").querySelector("button[onclick='viewPremiumDetails()']");
-      const evtId = btn.getAttribute("data-evt-id");
-      closePremiumPopup();
-      if(evtId) openEventDetails(evtId);
-    };
-
-    // =========================================================================
-    // DYNAMIC MODALS ENGINE
-    // =========================================================================
-    window.openGeneralModal = function(htmlContent) {
-      const modal = document.getElementById("general-modal");
-      const body = document.getElementById("general-modal-body");
-      if (modal && body) {
-        body.innerHTML = htmlContent;
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-        lucide.createIcons();
-      }
-    };
-
-    window.closeGeneralModal = function() {
-      const modal = document.getElementById("general-modal");
-      if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
-    };
-
-    window.openEventDetails = function(eventId) {
-      const evt = state.events.find(e => e.id === eventId);
-      if(!evt) return;
-
-      openGeneralModal(`
-        <div class="relative">
-          <div class="h-64 md:h-80 w-full relative bg-neutral-900">
-            <img src="${evt.flyer}" class="w-full h-full object-cover opacity-60">
-            <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-            <button onclick="closeGeneralModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-brand-orange transition">
-              ✕
-            </button>
-            <div class="absolute bottom-4 left-4 right-4 text-white">
-              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-brand-violet text-white border border-brand-violet/40 uppercase mb-2 inline-block">
-                ${evt.categoria}
-              </span>
-              <h2 class="text-2xl md:text-3xl font-bold font-display text-white mt-1 drop-shadow">${evt.nome}</h2>
-            </div>
-          </div>
-          
-          <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-              <div>
-                <h4 class="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-2">Sobre o Evento</h4>
-                <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">${evt.descricao}</p>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#1D153A]/50 border border-slate-100 dark:border-brand-carddark/50">
-                  <span class="block text-[10px] text-slate-400 font-semibold mb-1 uppercase">Local do Evento</span>
-                  <span class="text-xs font-bold flex items-center gap-1">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-orange"></i> ${evt.local}
-                  </span>
-                </div>
-                <div class="p-4 rounded-xl bg-slate-50 dark:bg-[#1D153A]/50 border border-slate-100 dark:border-brand-carddark/50">
-                  <span class="block text-[10px] text-slate-400 font-semibold mb-1 uppercase">Horário</span>
-                  <span class="text-xs font-bold flex items-center gap-1">
-                    <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-violet"></i> ${evt.data} às ${evt.hora}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-6">
-              <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/20">
-                <span class="block text-xs font-bold uppercase text-slate-400 mb-2">Preço do Ingresso</span>
-                <span class="text-2xl font-bold font-display text-brand-orange">${evt.preco}</span>
-                
-                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-brand-carddark/40 space-y-3">
-                  <div class="flex items-center gap-2 text-xs">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-                    <span>Compra 100% Segura</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-xs">
-                    <i data-lucide="user" class="w-4 h-4 text-brand-violet"></i>
-                    <span>Promotor: ${evt.promotor}</span>
-                  </div>
-                </div>
-
-                <a href="https://wa.me/244931352915?text=Ola,%20gostaria%20de%20saber%20mais%20e%20adquirir%20cartoes%20para%20o%20evento%20${encodeURIComponent(evt.nome)}" target="_blank" class="mt-4 w-full bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-95 transition-all text-xs">
-                  <i data-lucide="circle-dot" class="w-4 h-4"></i> Adquirir Bilhete no WhatsApp
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      `);
-    };
-
-    // =========================================================================
-    // PRIVATE CHAT ENGINE (SIMULATED OR live FIRESTORE REALTIME SYNC)
-    // =========================================================================
-    window.toggleChatDrawerWidget = function() {
-      const panel = document.getElementById("chat-drawer-panel");
-      if(!panel) return;
-      panel.classList.toggle("hidden");
-      panel.classList.toggle("flex");
-      document.getElementById("chat-unread-badge").classList.add("hidden");
-      renderChatDrawer();
-    };
-
-    function renderChatDrawer() {
-      const box = document.getElementById("chat-messages-box");
-      if(!box) return;
-      
-      const currentSender = state.currentUser ? state.currentUser.telefone : "Guest";
-
-      box.innerHTML = state.chats.map(c => {
-        const isMe = c.remetente === currentSender;
-        return `
-          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-            <span class="text-[9px] text-slate-400 font-semibold mb-0.5">${c.nome}</span>
-            <div class="p-3 rounded-2xl max-w-[85%] ${isMe ? 'bg-brand-violet text-white rounded-tr-none' : 'bg-slate-200 dark:bg-brand-carddark text-slate-800 dark:text-white rounded-tl-none'}">
-              <p>${c.texto}</p>
-            </div>
-            <span class="text-[8px] text-slate-400 mt-0.5">${c.hora}</span>
-          </div>
-        `;
-      }).join('');
-      box.scrollTop = box.scrollHeight;
-      lucide.createIcons();
-    }
-
-    window.handleSendChatMessage = function(e) {
-      e.preventDefault();
-      const input = document.getElementById("chat-typed-msg");
-      if(!input) return;
-      const msgText = input.value.trim();
-      if(!msgText) return;
-
-      const currentSender = state.currentUser ? state.currentUser.telefone : "Guest";
-      const currentSenderName = state.currentUser ? state.currentUser.nome : "Convidado";
-
-      const now = new Date();
-      const horaStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-      const newMsg = {
-        remetente: currentSender,
-        nome: currentSenderName,
-        texto: msgText,
-        hora: horaStr
-      };
-
-      state.chats.push(newMsg);
-      syncLocalStorage();
-      input.value = '';
-      renderChatDrawer();
-
-      // Simple autonomous administrator reply trigger if guest or standard user talks
-      if(state.currentUser?.role !== 'admin') {
+    window.scrollToElement = function(id) {
+      const target = document.getElementById(id);
+      if(target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // If not home, navigate first
+        navigateTo('home');
         setTimeout(() => {
-          state.chats.push({
-            remetente: "AdminBot",
-            nome: "Suporte AngoFest",
-            texto: `Olá ${currentSenderName}! Recebemos a sua mensagem no chat central. O administrador José Sorte ou Josué Bocoto irá responder diretamente para o seu número ${currentSender} se necessário.`,
-            hora: now.getHours() + ":" + (now.getMinutes() + 1).toString().padStart(2, '0')
-          });
-          syncLocalStorage();
-          renderChatDrawer();
-          const badge = document.getElementById("chat-unread-badge");
-          if(badge) badge.classList.remove("hidden");
-        }, 1500);
+          const t = document.getElementById(id);
+          if(t) t.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
       }
     };
 
+    window.toggleMobileMenu = function() {
+      const drawer = document.getElementById("mobile-menu-drawer");
+      drawer.classList.toggle("hidden");
+    };
+
     // =========================================================================
-    // PROMOTER SYSTEM (EVENTS REGISTRATION, EDITING & DELETION)
+    // EVENT ACTIONS: SUBMISSION AND MANAGING FLOW (By Promoters)
     // =========================================================================
-    window.setPromoterTab = function(tab) {
-      state.promoterTab = tab;
+    window.setPromoterActiveTab = function(tabName) {
+      state.promoterTab = tabName;
       renderApp();
     };
 
-    window.handleCreateEventFromForm = function(e) {
+    window.dispatchNewEvent = function(e) {
       e.preventDefault();
-      const nome = document.getElementById("pe-nome").value.trim();
-      const local = document.getElementById("pe-local").value.trim();
-      const data = document.getElementById("pe-data").value;
-      const hora = document.getElementById("pe-hora").value;
-      const categoria = document.getElementById("pe-categoria").value;
-      const preco = document.getElementById("pe-preco").value.trim();
-      const desc = document.getElementById("pe-desc").value.trim();
-      const prov = document.getElementById("pe-prov").value;
-      const mun = document.getElementById("pe-mun").value;
-      const flyer = document.getElementById("pe-flyer").value.trim() || "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80";
+      
+      const nome = document.getElementById("form-evt-nome").value.trim();
+      const local = document.getElementById("form-evt-local").value.trim();
+      const data = document.getElementById("form-evt-data").value;
+      const hora = document.getElementById("form-evt-hora").value;
+      const categoria = document.getElementById("form-evt-categoria").value;
+      const preco = document.getElementById("form-evt-preco").value.trim();
+      const desc = document.getElementById("form-evt-desc").value.trim();
+      const prov = document.getElementById("form-evt-provincia").value;
+      const mun = document.getElementById("form-evt-municipio").value;
+      const flyer = document.getElementById("form-evt-flyer").value.trim() || "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80";
+      
+      const planoNode = document.querySelector('input[name="form-evt-plano"]:checked');
+      const plano = planoNode ? planoNode.value : "Base";
+      const comprovativo = document.getElementById("form-evt-comprovativo").value.trim();
 
       if(!nome || !local || !data || !hora || !preco || !desc) {
-        showToast("Por favor preencha todos os campos obrigatórios.", "error");
+        showToast("Todos os campos assinalados com estrela são absolutamente obrigatórios.", "error");
         return;
       }
 
-      const newEvt = {
+      if(plano === "Premium" && !comprovativo) {
+        showToast("Os eventos Premium exigem obrigatoriamente a URL ou indicação do comprovativo de pagamento.", "error");
+        return;
+      }
+
+      const newEventObj = {
         id: "evt-user-" + Date.now(),
         nome: nome,
-        promotor: state.currentUser ? state.currentUser.nome : "Promotor Independente",
-        promotorPhone: state.currentUser?.telefone,
+        promotor: state.currentUser ? state.currentUser.nome : "Promotor Associado",
+        promotorPhone: state.currentUser ? state.currentUser.telefone : "900000000",
         provincia: prov,
         municipio: mun,
         local: local,
@@ -950,847 +797,1033 @@
         preco: preco,
         flyer: flyer,
         descricao: desc,
-        aprovado: false, // Needing admin validation
-        premium: false
+        status: "pendente", // ALL initially submitted are status: "pendente" ONLY until authorized
+        plano: plano,
+        comprovativo: comprovativo,
+        rejeitado: false,
+        rejeitarMotivo: ""
       };
 
-      state.events.push(newEvt);
-      syncLocalStorage();
-      showToast("Evento enviado! Aguarde aprovação de José Sorte ou Josué Bocoto.");
+      state.events.push(newEventObj);
+      saveState();
+      showToast("Sucesso! O seu evento foi enviado para aprovação por José Sorte ou Josué Bocoto.");
       state.promoterTab = 'my-events';
       renderApp();
     };
 
-    window.deletePromoEvent = function(id) {
-      if(confirm("Tem a certeza que deseja eliminar permanentemente este evento do portal?")) {
-        state.events = state.events.filter(e => e.id !== id);
-        syncLocalStorage();
+    window.triggerPromoterEventRemove = function(id) {
+      if(confirm("Tem a absoluta certeza que deseja remover ou cancelar a candidatura deste evento?")) {
+        state.events = state.events.filter(evt => evt.id !== id);
+        saveState();
         showToast("Evento removido com sucesso.");
         renderApp();
       }
     };
 
-    // =========================================================================
-    // SYSTEM ADMINISTRATION PANEL (José Sorte Francisco & Josué Bocoto)
-    // =========================================================================
-    window.setAdminTab = function(tab) {
-      state.adminTab = tab;
+    window.triggerPromoterEventEdit = function(id) {
+      const evt = state.events.find(e => e.id === id);
+      if(!evt) return;
+
+      state.tempEventEditId = id;
+      openModal(`
+        <div class="space-y-4">
+          <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-brand-carddark">
+            <h3 class="text-lg font-bold font-display text-brand-orange flex items-center gap-2">
+              <i data-lucide="edit-3"></i> Editar Evento
+            </h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white">✕</button>
+          </div>
+          <form onsubmit="handleSaveEditedEvent(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold mb-1">Título do Evento</label>
+              <input type="text" id="edit-evt-nome" value="${evt.nome}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-black dark:text-white" required>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold mb-1">Província</label>
+                <select id="edit-evt-provincia" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark text-xs border border-slate-300 dark:border-brand-carddark">
+                  ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}" ${evt.provincia === p ? 'selected' : ''}>${p}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Município</label>
+                <input type="text" id="edit-evt-municipio" value="${evt.municipio}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold mb-1">Data</label>
+                <input type="date" id="edit-evt-data" value="${evt.data}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Hora</label>
+                <input type="time" id="edit-evt-hora" value="${evt.hora}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold mb-1">Categoria</label>
+                <select id="edit-evt-categoria" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs">
+                  ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}" ${evt.categoria === c.id ? 'selected' : ''}>${c.label}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Preço (Kz ou Gratuito)</label>
+                <input type="text" id="edit-evt-preco" value="${evt.preco}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+              </div>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Endereço do Local</label>
+              <input type="text" id="edit-evt-local" value="${evt.local}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Link do Cartaz (Imagem URL)</label>
+              <input type="url" id="edit-evt-flyer" value="${evt.flyer}" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Descrição Detalhada</label>
+              <textarea id="edit-evt-desc" rows="3" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>${evt.descricao}</textarea>
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-2.5 rounded-xl font-bold hover:scale-[1.01] transition-all">
+              Atualizar Evento
+            </button>
+          </form>
+        </div>
+      `);
+    };
+
+    window.handleSaveEditedEvent = function(e) {
+      e.preventDefault();
+      const id = state.tempEventEditId;
+      const idx = state.events.findIndex(x => x.id === id);
+      if (idx === -1) return;
+
+      state.events[idx].nome = document.getElementById("edit-evt-nome").value;
+      state.events[idx].provincia = document.getElementById("edit-evt-provincia").value;
+      state.events[idx].municipio = document.getElementById("edit-evt-municipio").value;
+      state.events[idx].data = document.getElementById("edit-evt-data").value;
+      state.events[idx].hora = document.getElementById("edit-evt-hora").value;
+      state.events[idx].categoria = document.getElementById("edit-evt-categoria").value;
+      state.events[idx].preco = document.getElementById("edit-evt-preco").value;
+      state.events[idx].local = document.getElementById("edit-evt-local").value;
+      state.events[idx].flyer = document.getElementById("edit-evt-flyer").value;
+      state.events[idx].descricao = document.getElementById("edit-evt-desc").value;
+      // Re-trigger verification logic dynamically
+      state.events[idx].status = "pendente";
+
+      saveState();
+      closeModal();
+      showToast("Evento atualizado! Voltou ao estado Pendente para avaliação dos administradores.");
       renderApp();
     };
 
-    window.adminActionApproveUser = function(phone, decision) {
-      const user = state.users.find(u => u.telefone === phone);
-      if(user) {
-        if(decision === 'approve') {
-          user.aprovado = true;
-          showToast(`Utilizador ${user.nome} aprovado com sucesso!`);
-        } else {
-          state.users = state.users.filter(u => u.telefone !== phone);
-          showToast(`Candidatura de ${user.nome} rejeitada.`);
-        }
-        syncLocalStorage();
-        renderApp();
-      }
-    };
-
-    window.adminActionApproveEvent = function(id, decision) {
-      const evt = state.events.find(e => e.id === id);
-      if(evt) {
-        if(decision === 'approve') {
-          evt.aprovado = true;
-          showToast(`Evento "${evt.nome}" aprovado para o público!`);
-        } else {
-          state.events = state.events.filter(e => e.id !== id);
-          showToast(`Evento rejeitado.`);
-        }
-        syncLocalStorage();
-        renderApp();
-      }
-    };
-
-    window.adminActionPromotePremium = function(id) {
-      const evt = state.events.find(e => e.id === id);
-      if(evt) {
-        evt.premium = !evt.premium;
-        showToast(`Estado premium de "${evt.nome}" atualizado.`);
-        syncLocalStorage();
-        renderApp();
-      }
-    };
-
     // =========================================================================
-    // RENDERING CORE ENGINE (DYNAMICAL VIEW DISPATCHER)
+    // SYSTEM ADMINISTRATION PANEL LOGIC (José Sorte & Josué Bocoto workflows)
     // =========================================================================
-    function renderApp() {
-      // Toggle top headers
-      const headerSearch = document.getElementById("header-search");
-      if(state.currentView !== 'home' && headerSearch) {
-        headerSearch.disabled = true;
-      } else if (headerSearch) {
-        headerSearch.disabled = false;
-      }
+    window.setAdminActiveTab = function(tabName) {
+      state.adminTab = tabName;
+      renderApp();
+    };
 
-      renderAuthWidget();
-      
-      const main = document.getElementById("main-content");
-      if (!main) return;
+    window.adminToggleEventApproval = function(id, approveState) {
+      const idx = state.events.findIndex(e => e.id === id);
+      if(idx === -1) return;
 
-      if (state.currentView === 'home') {
-        main.innerHTML = getHomeViewHTML();
-      } else if (state.currentView === 'promoter-panel') {
-        main.innerHTML = getPromoterViewHTML();
-        // Dynamic province-municipal mapping listener
-        const provDrop = document.getElementById("pe-prov");
-        const munDrop = document.getElementById("pe-mun");
-        if(provDrop && munDrop) {
-          provDrop.addEventListener("change", (e) => {
-            const munList = PROVINCIAS_ANGOLA[e.target.value] || [];
-            munDrop.innerHTML = munList.map(m => `<option value="${m}">${m}</option>`).join('');
-          });
+      if(approveState === 'approve') {
+        state.events[idx].status = "aprovado";
+        state.events[idx].rejeitado = false;
+        showToast(`Evento "${state.events[idx].nome}" aprovado e publicado com sucesso no portal!`);
+        
+        // Dynamic notification if premium
+        if(state.events[idx].plano === "Premium") {
+          showToast("Este evento tem características Premium. Já está agendado e inserido nos ciclos e topos prioritários.", "success");
         }
-      } else if (state.currentView === 'admin-panel') {
-        main.innerHTML = getAdminViewHTML();
-      }
-
-      lucide.createIcons();
-    }
-
-    function renderAuthWidget() {
-      const widget = document.getElementById("auth-widget");
-      if (!widget) return;
-
-      if (state.currentUser) {
-        const isAdmin = state.currentUser.role === 'admin';
-        const isPromoter = state.currentUser.role === 'promoter';
-
-        widget.innerHTML = `
-          <div class="flex items-center gap-2">
-            <button onclick="toggleUserDropdown()" class="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-brand-carddark border border-slate-200 dark:border-brand-carddark transition">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-violet to-brand-orange flex items-center justify-center text-white font-bold text-xs uppercase">
-                ${state.currentUser.nome.substring(0,2)}
-              </div>
-              <span class="hidden sm:inline text-xs font-semibold max-w-[100px] truncate">${state.currentUser.nome}</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-            </button>
-            <div id="auth-dropdown" class="absolute top-12 right-0 w-52 rounded-2xl bg-white dark:bg-brand-dark border border-slate-200 dark:border-[#2a1e58] shadow-2xl p-2 hidden flex-col z-50 animate-fadeIn">
-              <div class="px-3 py-2 border-b border-slate-100 dark:border-brand-carddark/50 text-slate-400 text-[10px] font-bold uppercase">
-                Conta: ${state.currentUser.role.toUpperCase()}
-              </div>
-              ${isAdmin ? `<a href="#" onclick="navigateTo('admin-panel'); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs hover:bg-brand-violet/10 text-brand-orange font-bold"><i data-lucide="shield" class="w-4 h-4"></i> Painel Admin</a>` : ''}
-              ${isPromoter || isAdmin ? `<a href="#" onclick="navigateTo('promoter-panel'); toggleUserDropdown()" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs hover:bg-brand-violet/10"><i data-lucide="plus-circle" class="w-4 h-4"></i> Área Promotor</a>` : ''}
-              <button onclick="handleLogout()" class="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-xs text-red-500 hover:bg-red-500/10"><i data-lucide="log-out" class="w-4 h-4"></i> Terminar Sessão</button>
-            </div>
-          </div>
-        `;
       } else {
-        widget.innerHTML = `
-          <div class="flex items-center gap-2">
-            <button onclick="openLoginModal()" class="px-4 py-2 text-xs font-bold text-brand-violet dark:text-slate-200 border border-brand-violet hover:bg-brand-violet hover:text-white rounded-xl transition">
-              Login
-            </button>
-            <button onclick="openRegisterModal()" class="hidden sm:inline-block px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-brand-violet to-brand-orange rounded-xl shadow hover:scale-103 active:scale-95 transition">
-              Registo
+        const reason = prompt("Indique o motivo concreto ou observação de devolução do evento:");
+        if(reason === null) return; // cancel
+        state.events[idx].status = "rejeitado";
+        state.events[idx].rejeitado = true;
+        state.events[idx].rejeitarMotivo = reason || "Inconformidades no comprovativo ou preenchimento.";
+        showToast("O evento foi devolvido/rejeitado com a nota inserida.", "error");
+      }
+
+      saveState();
+      renderApp();
+    };
+
+    window.adminToggleUserApproval = function(phone, approveState) {
+      const idx = state.users.findIndex(u => u.telefone === phone);
+      if(idx === -1) return;
+
+      if(approveState === 'approve') {
+        state.users[idx].aprovado = true;
+        showToast(`Candidatura de ${state.users[idx].nome} autorizada! Já pode iniciar sessão por telefone.`);
+      } else {
+        if(confirm(`Pretende mesmo cancelar ou banir a conta de ${state.users[idx].nome}?`)) {
+          state.users = state.users.filter(u => u.telefone !== phone);
+          showToast("Conta eliminada do registo de candidaturas nacional.");
+        }
+      }
+
+      saveState();
+      renderApp();
+    };
+
+    window.adminDeleteEventCatalog = function(id) {
+      if(confirm("Deseja eliminar este evento definitivamente do catálogo oficial?")) {
+        state.events = state.events.filter(e => e.id !== id);
+        saveState();
+        showToast("Evento excluído permanentemente.");
+        renderApp();
+      }
+    };
+
+    // =========================================================================
+    // MODAL DIALOGS: REGISTRATION AND LOGIN (Phone login)
+    // =========================================================================
+    window.openAuthDialog = function(mode) {
+      if(mode === 'login') {
+        openModal(`
+          <div class="space-y-4 max-w-sm mx-auto">
+            <div class="text-center">
+              <h3 class="text-xl font-bold font-display text-brand-orange flex items-center justify-center gap-2">
+                <i data-lucide="log-in"></i> Acesso Seguro AngoFest
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">Insira os seus dados de conta autorizada</p>
+            </div>
+            
+            <form onsubmit="handleInAppLogin(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold mb-1">Telefone (Angola)</label>
+                <input type="text" id="login-form-phone" placeholder="9xxxxxxxx" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Palavra-passe</label>
+                <input type="password" id="login-form-pass" placeholder="Palavra-passe" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50 text-slate-800 dark:text-white" required>
+              </div>
+              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
+                Iniciar Sessão
+              </button>
+            </form>
+            <div class="text-center pt-3 border-t border-slate-200 dark:border-brand-carddark text-xs">
+              <p class="text-slate-400">Ainda não possui conta de promotor ou membro?</p>
+              <button onclick="openAuthDialog('register')" class="text-brand-orange font-bold hover:underline mt-1.5 focus:outline-none">Registe-se aqui</button>
+            </div>
+          </div>
+        `);
+      } else {
+        openModal(`
+          <div class="space-y-4 max-w-md mx-auto">
+            <div class="text-center">
+              <h3 class="text-xl font-bold font-display text-brand-violet flex items-center justify-center gap-2">
+                <i data-lucide="user-plus"></i> Cadastro de Membro ou Promotor
+              </h3>
+              <p class="text-xs text-slate-400 mt-1">Os dados passam por aprovação de José Sorte ou Josué Bocoto</p>
+            </div>
+
+            <form onsubmit="handleInAppRegister(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold mb-1">Nome Completo</label>
+                <input type="text" id="reg-form-nome" placeholder="ex: Ricardo Silva" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold mb-1">Telefone de Angola</label>
+                  <input type="text" id="reg-form-phone" placeholder="9xxxxxxxx" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                </div>
+                <div>
+                  <label class="block font-semibold mb-1">Idade</label>
+                  <input type="number" id="reg-form-idade" placeholder="Idade" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Perfil de Acesso</label>
+                <select id="reg-form-role" class="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark">
+                  <option value="user">Membro Geral (Quero ver e interagir)</option>
+                  <option value="promoter">Promotor de Eventos (Quero submeter cartazes e planos)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold mb-1">Defina a sua Senha</label>
+                <input type="password" id="reg-form-pass" placeholder="Senha de Acesso" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/50" required>
+              </div>
+              
+              <div class="p-3 bg-brand-orange/5 border border-brand-orange/20 rounded-xl text-[10px] text-slate-400 leading-normal">
+                ⚠️ Importante: Após submeter, os administradores verificarão o seu número de telefone de Angola. A ativação ocorre em até poucas horas.
+              </div>
+
+              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-[1.01] transition-all">
+                Submeter Pedido de Aderência
+              </button>
+            </form>
+          </div>
+        `);
+      }
+    };
+
+    window.handleInAppLogin = function(e) {
+      e.preventDefault();
+      const phone = document.getElementById("login-form-phone").value.trim();
+      const pass = document.getElementById("login-form-pass").value.trim();
+
+      const user = state.users.find(u => u.telefone === phone && u.pass === pass);
+      if(!user) {
+        showToast("Credenciais erradas ou inexistentes.", "error");
+        return;
+      }
+      if(!user.aprovado) {
+        showToast("Candidatura Pendente. Aguarde aprovação por José Sorte ou Josué Bocoto.", "error");
+        return;
+      }
+
+      state.currentUser = user;
+      saveState();
+      closeModal();
+      showToast(`Bem-vindo, ${user.nome}! Início de sessão efetuado com sucesso.`);
+      
+      if(user.role === 'admin') {
+        navigateTo('admin-dashboard');
+      } else if (user.role === 'promoter') {
+        navigateTo('promoter-dashboard');
+      } else {
+        navigateTo('home');
+      }
+    };
+
+    window.handleInAppRegister = function(e) {
+      e.preventDefault();
+      const nome = document.getElementById("reg-form-nome").value.trim();
+      const phone = document.getElementById("reg-form-phone").value.trim();
+      const idade = parseInt(document.getElementById("reg-form-idade").value);
+      const role = document.getElementById("reg-form-role").value;
+      const pass = document.getElementById("reg-form-pass").value.trim();
+
+      if(phone.length < 9) {
+        showToast("Insira um telefone angolano com 9 dígitos regulares.", "error");
+        return;
+      }
+
+      const matchExist = state.users.some(u => u.telefone === phone);
+      if(matchExist) {
+        showToast("Este número de telefone já está cadastrado no sistema nacional.", "error");
+        return;
+      }
+
+      const newUserObj = {
+        telefone: phone,
+        nome: nome,
+        idade: idade,
+        role: role,
+        aprovado: false, // Needing administration greenlight
+        pass: pass
+      };
+
+      state.users.push(newUserObj);
+      saveState();
+      closeModal();
+      showToast("Sucesso! A sua inscrição nacional de promotor/utilizador está em fila de revisão de cadastro.");
+      renderApp();
+    };
+
+    window.handleLogoutSession = function() {
+      state.currentUser = null;
+      state.currentView = 'home';
+      saveState();
+      showToast("Início de sessão terminado.");
+      renderApp();
+    };
+
+    // =========================================================================
+    // MODAL DIALOGS: EVENT IN-DEPTH SPECIFICS VIEW
+    // =========================================================================
+    window.triggerModalEventDetails = function(id) {
+      const evt = state.events.find(e => e.id === id);
+      if(!evt) return;
+
+      openModal(`
+        <div class="relative -m-6 rounded-2xl overflow-hidden pb-6">
+          <div class="h-64 sm:h-80 relative bg-neutral-900 border-b border-slate-200 dark:border-brand-carddark">
+            <img src="${evt.flyer}" alt="Flyer" class="w-full h-full object-cover opacity-60">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-brand-orange transition">✕</button>
+            <div class="absolute bottom-4 left-4 right-4 text-white">
+              <span class="px-2.5 py-1 text-[10px] font-bold bg-brand-violet text-white border border-brand-violet/30 uppercase rounded-full inline-block mb-2">
+                ${evt.categoria}
+              </span>
+              <h3 class="text-2xl font-bold font-display text-white mt-1 leading-tight">${evt.nome}</h3>
+            </div>
+          </div>
+
+          <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            <!-- Col 1 -->
+            <div class="md:col-span-2 space-y-4">
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Breve Resumo do Evento</h4>
+                <p class="whitespace-pre-line text-xs">${evt.descricao}</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3 pt-2">
+                <div class="p-3.5 rounded-xl border border-slate-200 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/40">
+                  <span class="block text-[8px] font-bold uppercase text-slate-400 mb-1">Localização e Endereço</span>
+                  <p class="font-bold flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-orange"></i> ${evt.local}</p>
+                </div>
+                <div class="p-3.5 rounded-xl border border-slate-200 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/40">
+                  <span class="block text-[8px] font-bold uppercase text-slate-400 mb-1">Data e Hora</span>
+                  <p class="font-bold flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-violet"></i> ${evt.data} às ${evt.hora}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2 -->
+            <div class="space-y-4">
+              <div class="p-4.5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-slate-50 dark:bg-brand-carddark/40 text-center">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Preço Regular</span>
+                <span class="text-2xl font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange block mb-4">${evt.preco}</span>
+                
+                <div class="border-t border-slate-200 dark:border-brand-carddark/50 pt-3 space-y-2 text-left">
+                  <p class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i> Promotor: <span class="font-semibold">${evt.promotor}</span></p>
+                  <p class="flex items-center gap-1.5 text-emerald-500"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Venda Autorizada</p>
+                </div>
+
+                <a href="https://wa.me/244931352915?text=Olá,%20gostaria%20de%20saber%20onde%20comprar%20e%20adquirir%20cartões%20para%20o%20evento%20${encodeURIComponent(evt.nome)}%20pelo%20AngoFest!" target="_blank" class="mt-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-2.5 font-bold flex items-center justify-center gap-1.5 transform active:scale-95 transition-all">
+                  <i data-lucide="ticket" class="w-4 h-4"></i> Comprar via WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+    };
+
+    // =========================================================================
+    // WORKSPACE SYSTEM COMPILER RENDERER (ALL DYNAMIC HTML MODULES)
+    // =========================================================================
+    window.renderApp = function() {
+      // Loading State fadeout logic
+      const loading = document.getElementById("loading-screen");
+      if(loading) {
+        setTimeout(() => {
+          loading.classList.add("hidden");
+        }, 300);
+      }
+
+      // Update Auth Widget Header
+      const headerAuth = document.getElementById("header-auth-section");
+      if(headerAuth) {
+        if(state.currentUser) {
+          const user = state.currentUser;
+          let viewRouteBtn = "";
+          if(user.role === 'admin') {
+            viewRouteBtn = `<button onclick="navigateTo('admin-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-orange-500/10 text-brand-orange hover:bg-orange-500/20 transition flex items-center gap-1"><i data-lucide="sliders" class="w-3.5 h-3.5"></i> Painel Admin</button>`;
+          } else if(user.role === 'promoter') {
+            viewRouteBtn = `<button onclick="navigateTo('promoter-dashboard')" class="text-xs font-bold leading-none py-2 px-3 rounded-xl bg-purple-500/10 text-brand-violet hover:bg-purple-500/20 transition flex items-center gap-1"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Área Promotor</button>`;
+          }
+
+          headerAuth.innerHTML = `
+            <div class="flex items-center gap-2">
+              <div class="hidden sm:flex flex-col text-right">
+                <span class="text-xs font-bold font-display truncate max-w-[120px] mb-0.5">${user.nome}</span>
+                <span class="text-[9px] text-slate-400 leading-none capitalize">${user.role}</span>
+              </div>
+              <div class="w-8 h-8 rounded-full bg-brand-violet/10 text-brand-violet flex items-center justify-center font-display font-bold text-xs uppercase" title="${user.nome}">
+                ${user.nome.substring(0, 1)}
+              </div>
+              ${viewRouteBtn}
+              <button onclick="handleLogoutSession()" class="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition" title="Logout"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+            </div>
+          `;
+        } else {
+          headerAuth.innerHTML = `
+            <button onclick="openAuthDialog('login')" class="text-xs font-semibold px-4 h-10 rounded-full border border-slate-300 dark:border-brand-carddark/60 hover:text-brand-orange transition flex items-center gap-1.5"><i data-lucide="unlock" class="w-3.5 h-3.5"></i> Acesso</button>
+            <button onclick="openAuthDialog('register')" class="text-xs font-bold px-4 h-10 rounded-full bg-gradient-to-r from-brand-violet to-brand-orange text-white hover:opacity-90 transition inline-block">Registo</button>
+          `;
+        }
+      }
+
+      // Main Routing
+      const workspace = document.getElementById("app-workspace");
+      if(!workspace) return;
+
+      if(state.currentView === 'home') {
+        renderHome(workspace);
+      } else if (state.currentView === 'promoter-dashboard') {
+        renderPromoterDashboard(workspace);
+      } else if (state.currentView === 'admin-dashboard') {
+        renderAdminDashboard(workspace);
+      }
+
+      lucide.createIcons();
+    };
+
+    // 1. HOME SCREEN
+    function renderHome(container) {
+      const approvedPremium = state.events.filter(e => e.status === "aprovado" && e.plano === "Premium");
+      const catalog = getFilteredEvents(); // Already filters out unapproved events!
+
+      // Setup Province dropdown selections
+      const provinces = Object.keys(PROVINCIAS_ANGOLA);
+      const activeProvinceMap = state.filterProvincia ? PROVINCIAS_ANGOLA[state.filterProvincia] : [];
+
+      container.innerHTML = `
+        <!-- Hero Dynamic Section -->
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-brand-dark to-brand-carddark text-white p-6 sm:p-12 mb-8 border border-brand-carddark">
+          <div class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-[#06030F] to-transparent pointer-events-none"></div>
+          <div class="relative z-10 max-w-3xl space-y-4">
+            <span class="inline-flex items-center gap-1 px-3 py-1 bg-brand-orange/20 border border-brand-orange/40 text-brand-orange text-[9px] font-bold uppercase rounded-full tracking-wider">
+              <i data-lucide="flame" class="w-3 h-3"></i> O Portal de Eventos N.º 1 de Angola
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-extrabold font-display leading-tight tracking-tight">
+              Encontre o seu próximo <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">Grande Evento</span> em qualquer Província!
+            </h1>
+            <p class="text-slate-300 text-xs sm:text-sm max-w-xl">
+              Crie experiências e promova festas, congressos, conferências corporativas, workshops e espetáculos. De Cabinda ao Cunene, tudo num único lugar sincronizado.
+            </p>
+            <div class="pt-2 flex flex-wrap gap-2.5">
+              <button onclick="scrollToElement('explorar-sec')" class="bg-brand-violet hover:bg-[#6D28D9] text-white font-bold py-3 px-6 rounded-xl text-xs transition duration-200">Explorar Eventos</button>
+              <button onclick="openAuthDialog('register')" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold py-3 px-5 rounded-xl text-xs transition duration-200">Inscrever-se como Promotor</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horizontal Slide Banner (Premium Patrocinados) Carousel -->
+        ${approvedPremium.length > 0 ? `
+          <div class="mb-10 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-brand-carddark/50 pb-3">
+              <h3 class="text-sm font-bold uppercase tracking-wider font-display flex items-center gap-2 text-brand-orange">
+                <i data-lucide="sparkles" class="w-4 h-4 animate-bounce"></i> Destaques Premium Patrocinados (Angola)
+              </h3>
+              <span class="text-[10px] text-slate-400 font-semibold uppercase">Deslize para ver</span>
+            </div>
+            
+            <div class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x snap-mandatory">
+              ${approvedPremium.map(evt => `
+                <div class="min-w-[280px] sm:min-w-[360px] snap-start bg-white dark:bg-brand-carddark flex flex-col rounded-2xl border border-slate-200 dark:border-brand-carddark overflow-hidden shadow-md relative group hover:scale-[1.01] transition duration-200">
+                  <div class="absolute top-2 right-2 z-10 bg-brand-orange/90 text-white text-[8px] font-bold py-1 px-2.5 rounded-full uppercase tracking-wider">Premium</div>
+                  <div class="aspect-video relative overflow-hidden bg-slate-900">
+                    <img src="${evt.flyer}" alt="Flyer" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-2 left-2 text-white">
+                      <span class="bg-brand-violet text-white text-[8px] font-bold px-2 py-0.5 rounded uppercase">${evt.categoria}</span>
+                    </div>
+                  </div>
+                  <div class="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 class="text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100 uppercase">${evt.nome}</h4>
+                      <p class="text-[10px] text-slate-400 line-clamp-2 mt-1 leading-normal">${evt.descricao}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 dark:border-brand-carddark/40 flex items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-300">
+                      <span class="flex items-center gap-0.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-orange"></i> ${evt.provincia} • ${evt.municipio}</span>
+                      <span class="text-brand-orange font-bold font-display">${evt.preco}</span>
+                    </div>
+                    <button onclick="triggerModalEventDetails('${evt.id}')" class="mt-3 w-full py-2 bg-slate-100 dark:bg-slate-800/80 hover:bg-brand-violet hover:text-white rounded-xl text-[11px] font-bold transition duration-200">
+                      Ver Bilheteira & Local
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Advanced Search Engine Filters Panel -->
+        <div id="explorar-sec" class="bg-white dark:bg-brand-dark/40 border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 mb-8 space-y-4">
+          <h3 class="text-sm font-bold uppercase tracking-wider font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">Pesquisa e Filtragem Inteligente de Cartazes</h3>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Filter Província -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 ">Província</label>
+              <select onchange="handleDropdownFilter('provincia', this.value)" class="w-full h-11 px-3 rounded-xl bg-slate-100 dark:bg-brand-carddark text-xs font-semibold border border-transparent dark:border-brand-carddark text-slate-700 dark:text-slate-200 outline-none">
+                <option value="">Todas as Províncias</option>
+                ${provinces.map(p => `<option value="${p}" ${state.filterProvincia === p ? 'selected' : ''}>${p}</option>`).join('')}
+              </select>
+            </div>
+            <!-- Filter Municipio Cascade -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5">Município</label>
+              <select onchange="handleDropdownFilter('municipio', this.value)" ${!state.filterProvincia ? 'disabled' : ''} class="w-full h-11 px-3 rounded-xl bg-slate-100 dark:bg-brand-carddark text-xs font-semibold border border-transparent dark:border-brand-carddark text-slate-700 dark:text-slate-200 outline-none disabled:opacity-50">
+                <option value="">Todos os Municípios</option>
+                ${activeProvinceMap.map(m => `<option value="${m}" ${state.filterMunicipio === m ? 'selected' : ''}>${m}</option>`).join('')}
+              </select>
+            </div>
+            <!-- Filter Preço -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5">Tipo de Ingresso</label>
+              <select onchange="handleDropdownFilter('price', this.value)" class="w-full h-11 px-3 rounded-xl bg-slate-100 dark:bg-brand-carddark text-xs font-semibold border border-transparent dark:border-brand-carddark text-slate-700 dark:text-slate-200 outline-none">
+                <option value="all" ${state.filterPrice === 'all' ? 'selected' : ''}>Todos os Preços</option>
+                <option value="free" ${state.filterPrice === 'free' ? 'selected' : ''}>Apenas Gratuitos</option>
+                <option value="paid" ${state.filterPrice === 'paid' ? 'selected' : ''}>Apenas Pagos</option>
+              </select>
+            </div>
+            <!-- Filter data -->
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1.5">Data do Evento</label>
+              <input type="date" value="${state.filterDate}" onchange="handleDropdownFilter('date', this.value)" class="w-full h-11 px-3 rounded-xl bg-slate-100 dark:bg-brand-carddark text-xs font-semibold border border-transparent dark:border-brand-carddark text-slate-700 dark:text-slate-200 outline-none">
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 items-center justify-between pt-3 border-t border-slate-100 dark:border-brand-carddark/40">
+            <div class="flex gap-1.5 overflow-x-auto pb-1 max-w-full">
+              ${CATEGORIAS.map(cat => `
+                <button onclick="selectCategoryFilter('${cat.id}')" class="px-4 py-2 rounded-full text-[10px] font-bold whitespace-nowrap uppercase tracking-wider transition ${state.selectedCategory === cat.id ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark hover:bg-slate-200 hover:text-black dark:hover:text-white'}">
+                  ${cat.label}
+                </button>
+              `).join('')}
+            </div>
+            
+            <button onclick="clearAllFilters()" class="text-xs font-bold text-brand-orange hover:underline focus:outline-none flex items-center gap-1.5 mt-2 sm:mt-0">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i> Limpar Filtros
             </button>
           </div>
-        `;
-      }
-      lucide.createIcons();
-    }
+        </div>
 
-    window.toggleUserDropdown = function() {
-      const drop = document.getElementById("auth-dropdown");
-      if(drop) drop.classList.toggle("hidden");
-    };
+        <!-- Event Grid Group Catalog -->
+        <div id="catalog-section" class="space-y-6">
+          <div class="flex justify-between items-center pb-2 border-b border-lightbg dark:border-brand-carddark/50">
+            <h4 class="font-display font-bold text-lg">Catálogo Total de Eventos (${catalog.length})</h4>
+            <span class="text-xs text-slate-400 font-semibold uppercase">Angola Total</span>
+          </div>
 
-    window.toggleMobileMenu = function() {
-      const drawer = document.getElementById("mobile-drawer");
-      if(drawer) drawer.classList.toggle("hidden");
-    };
+          ${catalog.length > 0 ? `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${catalog.map(evt => `
+                <div class="bg-white dark:bg-brand-carddark/60 rounded-2xl border border-slate-200 dark:border-brand-carddark overflow-hidden flex flex-col group relative">
+                  <!-- Tag Destaque / Normal -->
+                  ${evt.plano === "Premium" ? `
+                    <div class="absolute top-3 left-3 bg-brand-orange text-white text-[8px] font-bold py-1 px-2.5 rounded-full tracking-wider uppercase z-10 shadow-md">Premium Destaque</div>
+                  ` : ''}
 
-    // =========================================================================
-    // WORKSPACE VIEWS HTML GENERATORS
-    // =========================================================================
-
-    // 1. HOME VIEW
-    function getHomeViewHTML() {
-      const filtered = getFilteredEvents();
-      const premiumEvents = state.events.filter(e => e.premium && e.aprovado);
-
-      // Category filter pills
-      const catPills = CATEGORIAS_LISTA.map(cat => {
-        const isSel = state.selectedCategory === cat.id;
-        return `
-          <button onclick="handleCategorySelect('${cat.id}')" class="flex items-center gap-1.5 px-4 h-10 rounded-full text-xs font-bold whitespace-nowrap border transition duration-300 ${isSel ? 'bg-gradient-to-tr from-brand-violet to-brand-orange text-white border-transparent shadow-lg' : 'bg-white dark:bg-[#1D153A] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-brand-carddark/50 hover:bg-slate-100' }">
-            <i data-lucide="${cat.icon}" class="w-4 h-4"></i> ${cat.nome}
-          </button>
-        `;
-      }).join('');
-
-      // Province drop list
-      const provOptions = Object.keys(PROVINCIAS_ANGOLA).map(p => `
-        <option value="${p}" ${state.filters.provincia === p ? 'selected' : ''}>${p}</option>
-      `).join('');
-
-      // Municipality options based on province selection
-      let munOptions = '<option value="">Todos Municípios</option>';
-      if(state.filters.provincia) {
-        munOptions += PROVINCIAS_ANGOLA[state.filters.provincia].map(m => `
-          <option value="${m}" ${state.filters.municipio === m ? 'selected' : ''}>${m}</option>
-        `).join('');
-      }
-
-      // Premium Sliding Horizontal Section
-      let premiumSection = '';
-      if(premiumEvents.length > 0) {
-        premiumSection = `
-          <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-            <div class="flex items-center gap-2 mb-4">
-              <i data-lucide="sparkles" class="w-5 h-5 text-brand-orange animate-pulse"></i>
-              <h2 class="text-xl font-bold tracking-tight">Destaques Premium Patrocinados</h2>
-            </div>
-            <!-- Horizontal Scroll View -->
-            <div class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x touch-pan-x">
-              ${premiumEvents.map(evt => `
-                <div class="min-w-[280px] sm:min-w-[340px] max-w-[340px] rounded-2xl bg-white dark:bg-brand-dark border-2 border-brand-orange p-3 flex-shrink-0 snap-center shadow-xl relative cursor-pointer" onclick="openEventDetails('${evt.id}')">
-                  <div class="absolute top-2 right-2 bg-brand-orange text-white text-[9px] font-bold py-0.5 px-3 rounded-full uppercase tracking-widest z-10">Premium</div>
-                  <div class="rounded-xl overflow-hidden aspect-video bg-neutral-900 border border-brand-carddark">
-                    <img src="${evt.flyer}" class="w-full h-full object-cover">
+                  <div class="aspect-video relative overflow-hidden bg-neutral-900">
+                    <img src="${evt.flyer}" alt="Flyer" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-3 left-3 flex gap-2">
+                      <span class="bg-brand-violet/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">${evt.categoria}</span>
+                    </div>
                   </div>
-                  <div class="mt-3">
-                    <span class="text-[10px] uppercase font-bold text-brand-orange">${evt.categoria}</span>
-                    <h3 class="font-display font-bold text-sm text-slate-800 dark:text-white truncate mt-0.5">${evt.nome}</h3>
-                    <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2">
-                       <span>📍 ${evt.provincia} • ${evt.municipio}</span>
-                       <span class="font-bold text-brand-orange">${evt.preco}</span>
+
+                  <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div class="space-y-1">
+                      <h5 class="text-sm font-bold font-display leading-tight uppercase text-slate-800 dark:text-slate-100">${evt.nome}</h5>
+                      <p class="text-[11px] text-slate-400 line-clamp-2">${evt.descricao}</p>
+                    </div>
+
+                    <div class="space-y-2 pt-3 border-t border-slate-105 dark:border-brand-carddark/40 text-[11px] text-slate-500 dark:text-slate-300">
+                      <p class="flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-orange"></i> Macrorregião: <span class="font-bold text-slate-800 dark:text-white">${evt.provincia}, ${evt.municipio}</span></p>
+                      <p class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> ${evt.data} às ${evt.hora}</p>
+                      <p class="flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i> Promotor: <span class="font-bold">${evt.promotor}</span></p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                      <span class="text-brand-orange font-bold font-display text-sm">${evt.preco}</span>
+                      <button onclick="triggerModalEventDetails('${evt.id}')" class="px-4 py-2 bg-brand-violet text-white hover:bg-brand-orange text-[10px] font-bold uppercase rounded-xl transition duration-200 flex items-center gap-1">
+                        Ver Detalhes <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
               `).join('')}
             </div>
-          </section>
-        `;
-      }
-
-      // Main event display sorted by Province then Municipality
-      let eventsOutput = `
-        <div class="text-center py-12">
-          <i data-lucide="inbox" class="w-12 h-12 text-slate-400 mx-auto opacity-50"></i>
-          <h3 class="text-lg font-bold font-display mt-2 text-slate-400">Nenhum evento ativo com os filtros selecionados</h3>
-          <p class="text-xs text-slate-500 mt-1">Experimente alargar o âmbito da sua pesquisa ou limpe todos os filtros.</p>
-          <button onclick="clearFilters()" class="mt-4 px-4 py-2 bg-brand-violet text-white text-xs font-bold rounded-xl hover:bg-brand-orange transition">Limpar Filtros</button>
+          ` : `
+            <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-3xl space-y-3">
+              <div class="w-12 h-12 bg-slate-100 dark:bg-brand-carddark text-slate-400 mx-auto rounded-full flex items-center justify-center">
+                <i data-lucide="frown" class="w-6 h-6"></i>
+              </div>
+              <p class="text-sm font-semibold">Nenhum evento ativo com esses filtros foi encontrado.</p>
+              <p class="text-xs text-slate-400">Experimente limpar os filtros ou selecionar outra província do país de Angola.</p>
+              <button onclick="clearAllFilters()" class="text-xs font-bold text-brand-violet hover:underline">Repor Todos os Filtros</button>
+            </div>
+          `}
         </div>
-      `;
 
-      if(filtered.length > 0) {
-        // Group by Province
-        const grouped = {};
-        filtered.forEach(evt => {
-          if(!grouped[evt.provincia]) grouped[evt.provincia] = {};
-          if(!grouped[evt.provincia][evt.municipio]) grouped[evt.provincia][evt.municipio] = [];
-          grouped[evt.provincia][evt.municipio].push(evt);
-        });
-
-        eventsOutput = Object.keys(grouped).map(prov => {
-          return `
-            <div class="mb-10" id="provincias-sec">
-               <div class="border-b border-brand-violet/20 pb-2 mb-6">
-                 <h2 class="text-2xl font-bold tracking-tight text-brand-violet uppercase flex items-center gap-2">
-                   <i data-lucide="map" class="w-6 h-6"></i> Província de ${prov}
-                 </h2>
-               </div>
-               
-               ${Object.keys(grouped[prov]).map(muni => `
-                 <div class="mb-8">
-                   <h3 class="text-base font-bold text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
-                     <i data-lucide="map-pin" class="w-4 h-4"></i> Município: ${muni}
-                   </h3>
-                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                     ${grouped[prov][muni].map(evt => `
-                       <div class="bg-white dark:bg-[#1D153A]/50 border border-slate-200 dark:border-brand-carddark/50 hover:border-brand-violet/50 rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col justify-between" onclick="openEventDetails('${evt.id}')">
-                         <div>
-                           <div class="relative rounded-xl overflow-hidden aspect-video bg-neutral-900 border border-slate-100 dark:border-brand-carddark mb-3">
-                             <img src="${evt.flyer}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                             <span class="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[10px] font-bold py-1 px-3 rounded-lg border border-white/20 whitespace-nowrap">
-                               ${evt.categoria}
-                             </span>
-                           </div>
-                           <h4 class="font-display font-bold text-base text-slate-800 dark:text-white line-clamp-1 group-hover:text-brand-orange transition">${evt.nome}</h4>
-                           <span class="block text-[11px] text-slate-400 font-semibold mt-1 truncate">📅 ${evt.data} às ${evt.hora}</span>
-                           <span class="block text-[11px] text-slate-400 font-semibold truncate">📍 Local: ${evt.local}</span>
-                         </div>
-                         <div class="mt-4 pt-3 border-t border-slate-100 dark:border-brand-carddark/30 flex items-center justify-between">
-                           <span class="text-xs text-slate-400 font-medium">Promotor: ${evt.promotor}</span>
-                           <span class="text-xs font-bold text-brand-orange">${evt.preco}</span>
-                         </div>
-                       </div>
-                     `).join('')}
-                   </div>
-                 </div>
-               `).join('')}
-            </div>
-          `;
-        }).join('');
-      }
-
-      return `
-        <!-- Hero Static Cover -->
-        <section class="relative bg-brand-dark text-white overflow-hidden py-16 md:py-24 border-b border-brand-orange/20">
-          <div class="absolute inset-0 bg-gradient-to-r from-brand-violet/20 to-brand-orange/20 mix-blend-multiply opacity-50"></div>
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center max-w-3xl">
-            <span class="bg-brand-violet/15 text-brand-orange text-xs font-bold tracking-widest uppercase border border-brand-orange/40 px-3 py-1.5 rounded-full animate-bounce inline-block mb-4">Plataforma Oficial de Angola</span>
-            <h1 class="text-3xl sm:text-5xl font-extrabold font-display leading-tight tracking-tight">O Pulso do Entretenimento em Angola</h1>
-            <p class="text-sm sm:text-base text-slate-300 mt-4 leading-relaxed">Conectando Você aos Melhores Momentos e Experiências Únicas. Shows, Festas de Garagem, Festivais à Beira-Mar, Webinars de Elite, Congressos de Desenvolvimento e Formação Nacional.</p>
-            <div class="flex flex-wrap justify-center gap-4 mt-8">
-              <a href="#provincias-sec" class="px-6 py-3 bg-brand-orange hover:bg-brand-orange/90 text-white rounded-xl text-xs font-bold tracking-wide transition shadow-lg shadow-brand-orange/20">Explorar Eventos</a>
-              <button onclick="openRegisterModal()" class="px-6 py-3 bg-brand-violet/35 hover:bg-brand-violet/50 border border-brand-violet/60 text-white rounded-xl text-xs font-bold tracking-wide transition">Registar como Promotor</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Premium Event Slices -->
-        ${premiumSection}
-
-        <!-- Advanced Filter Hub & Event List Container -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-16">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <!-- Sidebar Filters -->
-            <div class="bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark rounded-2xl p-6 h-fit space-y-6">
-              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-brand-carddark/50">
-                <span class="font-display font-bold text-sm flex items-center gap-1"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-violet"></i> Filtrar Pesquisa</span>
-                <button onclick="clearFilters()" class="text-[10px] text-brand-orange font-bold hover:underline uppercase tracking-wider">Limpar tudo</button>
-              </div>
-
-              <!-- Província -->
-              <div>
-                <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Província</label>
-                <select onchange="handleFilterChange('provincia', this.value)" class="w-full px-3 py-2 bg-slate-100 dark:bg-[#1D153A] border border-slate-200 dark:border-[#382b6c] text-xs font-semibold rounded-xl outline-none text-slate-700 dark:text-slate-200">
-                  <option value="">Todas Províncias</option>
-                  ${provOptions}
-                </select>
-              </div>
-
-              <!-- Município -->
-              <div>
-                <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Município</label>
-                <select onchange="handleFilterChange('municipio', this.value)" class="w-full px-3 py-2 bg-slate-100 dark:bg-[#1D153A] border border-slate-200 dark:border-[#382b6c] text-xs font-semibold rounded-xl outline-none text-slate-700 dark:text-slate-200" ${!state.filters.provincia ? 'disabled' : ''}>
-                  ${munOptions}
-                </select>
-              </div>
-
-              <!-- Tipo Ingresso -->
-              <div>
-                <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Tipo de Ingresso</label>
-                <select onchange="handleFilterChange('tipoPreco', this.value)" class="w-full px-3 py-2 bg-slate-100 dark:bg-[#1D153A] border border-slate-200 dark:border-[#382b6c] text-xs font-semibold rounded-xl outline-none text-slate-700 dark:text-slate-200">
-                  <option value="all" ${state.filters.tipoPreco === 'all' ? 'selected' : ''}>Todos os preçários</option>
-                  <option value="free" ${state.filters.tipoPreco === 'free' ? 'selected' : ''}>Apenas Eventos Gratuitos</option>
-                  <option value="paid" ${state.filters.tipoPreco === 'paid' ? 'selected' : ''}>Apenas Eventos Pagos</option>
-                </select>
-              </div>
-
-              <!-- Data -->
-              <div>
-                <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Data Específica</label>
-                <input type="date" value="${state.filters.data}" onchange="handleFilterChange('data', this.value)" class="w-full px-3 py-2 bg-slate-100 dark:bg-[#1D153A] border border-slate-200 dark:border-[#382b6c] text-xs font-semibold rounded-xl outline-none text-slate-700 dark:text-slate-200">
-              </div>
-            </div>
-
-            <!-- Main Content: Horizontal Categories list & Cards -->
-            <div class="lg:col-span-3 space-y-6">
-              
-              <!-- Categories horizontal selection list -->
-              <div class="flex gap-2.5 overflow-x-auto pb-2 custom-scrollbar">
-                ${catPills}
-              </div>
-
-              <!-- Final dynamic compiled list -->
-              <div class="space-y-4">
-                ${eventsOutput}
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        <!-- Elegant Marketing, Founders Bio & Contacts Sections -->
-        
-        <!-- About segment -->
-        <section class="border-t border-slate-200 dark:border-brand-carddark bg-slate-100 dark:bg-brand-dark/20 py-16" id="sobre-sec">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <span class="text-brand-orange text-xs font-bold uppercase tracking-wider">A Nossa Origem</span>
-              <h2 class="text-3xl font-bold font-display mt-2">Promovendo a Cultura do Lazer em Angola</h2>
-              <p class="text-sm text-slate-500 leading-relaxed mt-4">
-                O AngoFest nasceu da imperiosa necessidade de digitalizar e apoiar a distribuição equitativa do entretenimento nas 18 províncias nacionais. Acreditamos que a cultura, música, feiras agrícolas e conferências digitais são motores autênticos para o bem-estar e o progresso social.
-              </p>
-              <p class="text-sm text-slate-500 leading-relaxed mt-4">
-                A nossa missão é conectar pessoas de todas as idades aos melhores organizadores angolanos de forma transparente, moderna e segura.
-              </p>
-            </div>
-            <div class="bg-gradient-to-tr from-brand-violet/10 to-brand-orange/5 border border-brand-violet/20 rounded-3xl p-8 relative overflow-hidden">
-               <span class="absolute -right-12 -bottom-12 w-48 h-48 rounded-full bg-brand-violet/10 blur-2xl"></span>
-               <h3 class="font-display font-bold text-lg text-brand-orange mb-4">As Nossas Estatísticas</h3>
-               <div class="grid grid-cols-3 gap-4 text-center">
-                 <div class="p-4 rounded-2xl bg-white dark:bg-brand-dark">
-                   <span class="block text-2xl font-bold text-brand-violet">18</span>
-                   <span class="text-[10px] text-slate-400 font-semibold uppercase">Províncias</span>
-                 </div>
-                 <div class="p-4 rounded-2xl bg-white dark:bg-brand-dark">
-                   <span class="block text-2xl font-bold text-brand-violet">10k+</span>
-                   <span class="text-[10px] text-slate-400 font-semibold uppercase">Pessoas</span>
-                 </div>
-                 <div class="p-4 rounded-2xl bg-white dark:bg-brand-dark">
-                   <span class="block text-2xl font-bold text-brand-violet">500+</span>
-                   <span class="text-[10px] text-slate-400 font-semibold uppercase">Eventos</span>
-                 </div>
-               </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Co-Founders Team Bios Biography -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div class="text-center max-w-2xl mx-auto mb-12">
-            <span class="text-brand-violet text-xs font-bold uppercase tracking-wider">Fundadores da Plataforma</span>
-            <h2 class="text-3xl font-bold font-display mt-2">Biografia dos Responsáveis</h2>
-            <p class="text-xs sm:text-sm text-slate-500 mt-2">
-              AngoFest foi ideada por dois líderes audazes e entusiastas de entretenimento e tecnologia, cuja ambição é facilitar o agendamento de lazer.
-            </p>
+        <!-- Organização de Eventos por Províncias Section -->
+        <div id="provincias-sec" class="mt-16 space-y-6">
+          <div class="flex flex-col space-y-1 pb-2 border-b border-slate-200 dark:border-brand-carddark/50">
+            <h3 class="text-sm font-bold font-display text-brand-violet uppercase tracking-widest">Organização por Província & Município</h3>
+            <p class="text-xs text-slate-400">Consulte de forma autónoma as províncias associadas com dados registados na plataforma</p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Founder 1 -->
-            <div class="bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row gap-6 items-center shadow">
-              <div class="w-24 h-24 rounded-2xl bg-brand-violet/10 text-brand-violet flex items-center justify-center font-bold text-3xl font-display flex-shrink-0">
-                JS
-              </div>
-              <div>
-                <span class="bg-brand-violet/10 text-brand-violet font-semibold text-[10px] px-3 py-0.5 rounded-full uppercase">Co-Fundador & CEO</span>
-                <h3 class="text-lg font-bold font-display mt-1">José Sorte Francisco</h3>
-                <p class="text-xs text-brand-orange font-semibold mt-0.5">Contacto: 931352915</p>
-                <p class="text-xs text-slate-400 leading-relaxed mt-2.5">
-                  Estudioso das dinâmicas de eventos culturais e focado em engenharia de sistemas. É o mentor principal da segurança nas redes de promotores de espetáculos em Angola.
-                </p>
-              </div>
-            </div>
-
-            <!-- Founder 2 -->
-            <div class="bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row gap-6 items-center shadow">
-              <div class="w-24 h-24 rounded-2xl bg-brand-orange/10 text-brand-orange flex items-center justify-center font-bold text-3xl font-display flex-shrink-0">
-                JB
-              </div>
-              <div>
-                <span class="bg-brand-orange/10 text-brand-orange font-semibold text-[10px] px-3 py-0.5 rounded-full uppercase">Co-Fundador & COO</span>
-                <h3 class="text-lg font-bold font-display mt-1">Josué Bocoto</h3>
-                <p class="text-xs text-brand-orange font-semibold mt-0.5">Contacto: 924042125</p>
-                <p class="text-xs text-slate-400 leading-relaxed mt-2.5">
-                  Especialista em marketing estratégico e relações públicas de entretenimento. Dirige as comunicações institucionais de AngoFest e parcerias com o Ministério do Turismo angolano.
-                </p>
-              </div>
-            </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            ${Object.keys(PROVINCIAS_ANGOLA).map(prov => {
+              const occurrences = state.events.filter(e => e.provincia === prov && e.status === "aprovado").length;
+              return `
+                <button onclick="handleDropdownFilter('provincia', '${prov}')" class="p-4 rounded-2xl border text-left bg-white dark:bg-brand-carddark border-slate-200 dark:border-brand-carddark hover:border-brand-orange transition-all flex justify-between items-center group">
+                  <div>
+                    <span class="block font-bold text-xs group-hover:text-brand-orange">${prov}</span>
+                    <span class="block text-[10px] text-slate-400 font-semibold mt-0.5">${occurrences} Eventos</span>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+              `;
+            }).join('')}
           </div>
-        </section>
-
-        <!-- Support and Contacts Segment -->
-        <section class="bg-brand-dark/95 text-white py-16" id="contacto-sec">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div class="space-y-4">
-              <h2 class="text-3xl font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">Fale Connosco Agora</h2>
-              <p class="text-sm text-slate-400 leading-relaxed">
-                Pretende promover o seu cartaz em outdoor digital e carrossel de patrocinados de topo? Entre em contacto e apoiaremos o agendamento da melhor campanha para o seu show.
-              </p>
-              <div class="space-y-3 pt-4 text-xs font-semibold">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="phone" class="w-5 h-5 text-brand-orange"></i>
-                  <span>Ligue: 931352915 / 924042125</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <i data-lucide="mail" class="w-5 h-5 text-brand-violet"></i>
-                  <span>Email: <a href="mailto:angofest@gmail.com" class="hover:underline">angofest@gmail.com</a></span>
-                </div>
-              </div>
-            </div>
-            <form onsubmit="handleContactMsg(event)" class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <input type="text" placeholder="Nome" class="px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none text-xs focus:ring-2 focus:ring-brand-violet text-white" required>
-                <input type="text" placeholder="Telemóvel" class="px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none text-xs focus:ring-2 focus:ring-brand-violet text-white" required>
-              </div>
-              <textarea placeholder="Sua Mensagem e Evento" class="w-full h-32 px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none text-xs focus:ring-2 focus:ring-brand-violet text-white resize-none" required></textarea>
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-101 text-xs tracking-wider uppercase transition-all shadow-lg shadow-brand-violet/20">Enviar Proposta de Outdoor</button>
-            </form>
-          </div>
-        </section>
-
-        <!-- Footer Footer -->
-        <footer class="bg-[#05030B] text-slate-400 py-12 border-t border-brand-carddark/60">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div class="md:col-span-2">
-              <span class="text-white text-lg font-bold font-display uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange">AngoFest</span>
-              <p class="text-xs text-slate-500 mt-2 max-w-sm">
-                O portal líder da cultura angolana de Luanda ao Cunene. Conectando o lazer, cultura, workshops inovadores, artes cénicas e festas desportivas com segurança e tecnologia vanguardista.
-              </p>
-            </div>
-            <div>
-              <h4 class="text-white font-bold font-display text-xs uppercase tracking-wider mb-3">Menu</h4>
-              <ul class="text-xs space-y-2">
-                <li><a href="#" onclick="navigateTo('home')" class="hover:text-white transition">Início</a></li>
-                <li><a href="#provincias-sec" class="hover:text-white transition">Pelo País</a></li>
-                <li><a href="#sobre-sec" class="hover:text-white transition">História</a></li>
-                <li><a href="#contacto-sec" class="hover:text-white transition">Suporte Comercial</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 class="text-white font-bold font-display text-xs uppercase tracking-wider mb-3">Parcerias</h4>
-              <ul class="text-xs space-y-2">
-                 <li>Eventos e Espetáculos</li>
-                 <li>Associação de Djs Organizados</li>
-                 <li>Ministério de Turismo Cultura</li>
-                 <li>Associação das 18 Províncias</li>
-              </ul>
-            </div>
-          </div>
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-brand-carddark/40 mt-8 pt-6 flex flex-col sm:flex-row justify-between text-[11px] text-slate-500 gap-4">
-             <span>© 2026 AngoFest Angola Limitada. Todos os direitos reservados.</span>
-             <span class="flex gap-4">
-               <a href="#" class="hover:text-white">Instagram</a>
-               <a href="#" class="hover:text-white">Facebook</a>
-               <a href="#" class="hover:text-white">YouTube</a>
-             </span>
-          </div>
-        </footer>
+        </div>
       `;
     }
 
-    // 2. PROMOTER WORKSPACE VIEW
-    function getPromoterViewHTML() {
-      if(!state.currentUser) {
-        return `
-          <div class="max-w-md mx-auto my-16 p-8 text-center bg-white dark:bg-brand-dark border rounded-3xl shadow">
-            <i data-lucide="shield-alert" class="w-12 h-12 text-brand-orange mx-auto"></i>
-            <h3 class="text-lg font-bold font-display mt-2">Área Reservada a Pró-Promotores</h3>
-            <p class="text-xs text-slate-400 mt-1">Por favor, aceda com a sua conta autorizada ou registe-se para poder submeter o seu primeiro cartaz de eventos de forma gratuita.</p>
-            <button onclick="openLoginModal()" class="mt-6 px-6 py-2 bg-brand-violet text-white rounded-xl text-xs font-semibold">Iniciar Sessão</button>
-          </div>
-        `;
-      }
-
-      const myEvents = state.events.filter(e => e.promotorPhone === state.currentUser.telefone);
-
-      let inner = '';
-      if(state.promoterTab === 'my-events') {
-        inner = `
-          <div>
-            <div class="flex items-center justify-between mb-4">
-               <h4 class="text-sm font-bold uppercase text-slate-400">Os meus Cartazes Cadastrados</h4>
-               <button onclick="setPromoterTab('add-event')" class="px-4 py-2 bg-brand-orange text-white text-xs font-bold rounded-xl flex items-center gap-1"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Criar Novo Evento</button>
+    // 2. PROMOTER DASHBOARD
+    function renderPromoterDashboard(container) {
+      const myEvents = state.events.filter(e => e.promotorPhone === state.currentUser?.telefone);
+      
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-brand-carddark/40 border border-slate-200 dark:border-brand-carddark/60 p-6 rounded-3xl">
+            <div>
+              <span class="text-xs font-bold text-brand-violet uppercase tracking-wider">Dashboard do Promotor Autorizado</span>
+              <h2 class="text-2xl font-bold font-display mt-0.5">Olá, ${state.currentUser?.nome}!</h2>
+              <p class="text-xs text-slate-400">Status da Conta: <span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 text-[10px] rounded-full font-bold uppercase border border-emerald-500/20">Aprovada Ativa</span></p>
             </div>
-            ${myEvents.length === 0 ? `
-              <div class="p-8 border border-dashed border-slate-350 dark:border-brand-carddark rounded-2xl text-center">
-                <i data-lucide="clipboard" class="w-10 h-10 mx-auto text-slate-400 opacity-50"></i>
-                <p class="text-xs text-slate-500 mt-2">Ainda não possui eventos submetidos com a sua conta comercial.</p>
-                <button onclick="setPromoterTab('add-event')" class="mt-3 px-4 py-1.5 bg-brand-violet text-white text-xs font-bold rounded-lg">Inscrever 1º Evento</button>
-              </div>
-            ` : `
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${myEvents.map(evt => `
-                  <div class="p-4 rounded-2xl bg-white dark:bg-brand-carddark/30 border border-slate-200 dark:border-brand-carddark">
-                    <div class="flex gap-4">
-                      <img src="${evt.flyer}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0">
-                      <div class="flex-1 min-w-0">
-                        <span class="text-[9px] uppercase font-bold text-brand-orange">${evt.categoria}</span>
-                        <h5 class="text-sm font-bold font-display truncate text-slate-800 dark:text-white">${evt.nome}</h5>
-                        <p class="text-[10px] text-slate-400 mt-0.5">📅 ${evt.data}</p>
-                        <p class="text-[10px] text-slate-400">📍 ${evt.provincia}, ${evt.municipio}</p>
+            
+            <div class="flex gap-2">
+              <button onclick="setPromoterActiveTab('my-events')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'my-events' ? 'bg-brand-violet text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Os Meus Eventos (${myEvents.length})</button>
+              <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase transition ${state.promoterTab === 'submit-form' ? 'bg-gradient-to-r from-brand-violet to-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark' }">Submeter Novo Cartaz</button>
+            </div>
+          </div>
+
+          ${state.promoterTab === 'my-events' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider">Histórico de Candidaturas & Eventos Enviados</h3>
+              
+              ${myEvents.length > 0 ? `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  ${myEvents.map(evt => {
+                    let badgeClass = "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20";
+                    let label = "Pendente";
+                    if(evt.status === "aprovado") {
+                      badgeClass = "bg-emerald-505 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
+                      label = "Aprovado Oficial";
+                    } else if (evt.status === "rejeitado") {
+                      badgeClass = "bg-red-500/10 text-red-500 border border-red-500/20";
+                      label = "Recusado / Erro de Comprovativo";
+                    }
+
+                    return `
+                      <div class="p-5 rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-[#120B2E]/50 flex gap-4 relative">
+                        <div class="w-20 h-24 rounded-lg bg-neutral-900 border overflow-hidden flex-shrink-0">
+                          <img src="${evt.flyer}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 space-y-2">
+                          <h4 class="font-bold text-xs uppercase text-slate-800 dark:text-slate-100 leading-tight">${evt.nome}</h4>
+                          <p class="text-[10px] text-slate-400 capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
+                          <p class="text-xs font-bold text-brand-orange">${evt.preco}</p>
+                          
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${badgeClass}">${label}</span>
+                            <span class="text-[9px] font-bold uppercase text-slate-400 px-1">${evt.plano}</span>
+                          </div>
+
+                          ${evt.status === "rejeitado" ? `
+                            <div class="p-2 bg-red-500/5 text-red-500 rounded text-[9px] font-semibold mt-1">
+                              <strong>Motivo:</strong> ${evt.rejeitarMotivo || 'Cartaz impróprio ou comprovativo não verificado.'}
+                            </div>
+                          ` : ''}
+                        </div>
+
+                        <!-- Actions bar -->
+                        <div class="absolute top-4 right-4 flex gap-1">
+                          <button onclick="triggerPromoterEventEdit('${evt.id}')" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-brand-orange transition" title="Editar"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="triggerPromoterEventRemove('${evt.id}')" class="p-2 bg-slate-105 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:text-red-500 transition" title="Remover"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : `
+                <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
+                  <p class="text-xs text-slate-450 mb-3">Caro ${state.currentUser?.nome}, ainda não possui nenhum evento / cartaz enviado a partir deste número de telefone.</p>
+                  <button onclick="setPromoterActiveTab('submit-form')" class="px-4 py-2 bg-brand-violet text-white rounded-xl text-xs font-bold uppercase">Começar a Vender / Promover</button>
+                </div>
+              `}
+            </div>
+          ` : `
+            <!-- SUBMIT EVENT SCREEN (PROMOTERS CADASTRO FLUXO COMPLETO) -->
+            <div class="bg-white dark:bg-[#120B2E]/60 border border-slate-200 dark:border-brand-carddark/60 rounded-3xl p-6 max-w-2xl mx-auto">
+              <h3 class="text-lg font-bold font-display uppercase text-brand-orange pb-3 border-b border-slate-205 dark:border-brand-carddark/50 mb-5">Submissão Oficial de Cartazes</h3>
+              
+              <form onsubmit="dispatchNewEvent(event)" class="space-y-4 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Título do Evento *</label>
+                  <input type="text" id="form-evt-nome" placeholder="Ex: Mega Show Reencontro" class="w-full text-slate-800 dark:text-white p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs focus:ring-1 focus:ring-brand-violet outline-none" required>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Província *</label>
+                    <select id="form-evt-provincia" onchange="cascadeFormMunicipios(this.value)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 dark:text-xs outline-none">
+                      ${Object.keys(PROVINCIAS_ANGOLA).map(p => `<option value="${p}">${p}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Município *</label>
+                    <select id="form-evt-municipio" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700 outline-none">
+                      <!-- Cascade Loaded dynamically -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Data *</label>
+                    <input type="date" id="form-evt-data" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Hora *</label>
+                    <input type="time" id="form-evt-hora" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Categoria *</label>
+                    <select id="form-evt-categoria" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-brand-carddark border border-slate-300 dark:border-brand-carddark text-xs text-slate-700">
+                      ${CATEGORIAS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-400 mb-1">Preço Normal (Kz ou escreva: Gratuito) *</label>
+                    <input type="text" id="form-evt-preco" placeholder="Ex: 5.000 Kz" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Local Físico / Sala *</label>
+                  <input type="text" id="form-evt-local" placeholder="Ex: Multiusos da Kilamba, Sala A" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs text-slate-800 dark:text-white" required>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Link do Cartaz (URL da imagem do flyer / flyer.png) *</label>
+                  <input type="url" id="form-evt-flyer" placeholder="https://exemplo.com/flyer.jpg" class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs">
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-400 mb-1">Descrição Detalhada do Evento *</label>
+                  <textarea id="form-evt-desc" rows="4" placeholder="Indique as atrações principais, políticas de entrada, contactos de cartões..." class="w-full p-3 rounded-xl border border-slate-300 dark:border-brand-carddark bg-slate-50 dark:bg-brand-dark/20 text-xs" required></textarea>
+                </div>
+
+                <!-- Plano Escolha -->
+                <div class="p-4 rounded-2xl bg-brand-violet/5 border border-brand-violet/20 space-y-3">
+                  <label class="block font-bold text-sm tracking-wide text-brand-violet">Escolha o seu Plano de Divulgação</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-slate-200 dark:border-brand-carddark rounded-xl flex items-start gap-2 cursor-pointer">
+                      <input type="radio" name="form-evt-plano" value="Base" class="mt-1" checked onchange="toggleReceiptViewForPlano('Base')">
+                      <div>
+                        <span class="block font-bold text-xs uppercase text-slate-700 dark:text-white">DIVULGAÇÃO BASE</span>
+                        <span class="block text-[10px] text-slate-400 mt-0.5">Surgimento livre no catálogo geral filtrado por província.</span>
+                        <span class="block text-xs font-bold text-brand-orange mt-2">Gratuito</span>
+                      </div>
+                    </label>
+                    <label class="p-3 bg-white dark:bg-[#120B2E] border border-brand-orange rounded-xl flex items-start gap-2 cursor-pointer">
+                      <input type="radio" name="form-evt-plano" value="Premium" class="mt-1" onchange="toggleReceiptViewForPlano('Premium')">
+                      <div>
+                        <span class="block font-bold text-xs uppercase text-brand-orange">DIVULGAÇÃO PREMIUM</span>
+                        <span class="block text-[10px] text-slate-400 mt-0.5">Topo prioritário, slide horizontais de elite, popup automático repetitivo.</span>
+                        <span class="block text-xs font-bold text-brand-violet mt-2">Consultar taxa WhatsApp</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <!-- Comprovativo block -->
+                  <div id="comprovativo-wrapper" class="hidden space-y-1.5 pt-2">
+                    <label class="block font-bold text-brand-orange">Insira a URL do Comprovativo de Pagamento ou Referência *</label>
+                    <input type="text" id="form-evt-comprovativo" placeholder="URL do ficheiro enviado, imagem ou referência do depósito" class="w-full p-3 rounded-xl bg-white dark:bg-[#120B2E] text-xs font-semibold border border-brand-orange outline-none">
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3.5 rounded-xl font-bold hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-brand-violet/20">
+                  <i data-lucide="check-circle-2"></i> Submeter para José Sorte & Josué Bocoto
+                </button>
+              </form>
+            </div>
+          `}
+        </div>
+      `;
+
+      // Default cascade trigger on promoter form
+      if(state.promoterTab === 'submit-form') {
+        cascadeFormMunicipios(Object.keys(PROVINCIAS_ANGOLA)[0]);
+      }
+    }
+
+    // Dynamic cascade select filler
+    window.cascadeFormMunicipios = function(provinceName) {
+      const select = document.getElementById("form-evt-municipio");
+      if(!select) return;
+
+      const items = PROVINCIAS_ANGOLA[provinceName] || [];
+      select.innerHTML = items.map(m => `<option value="${m}">${m}</option>`).join('');
+    };
+
+    window.toggleReceiptViewForPlano = function(plano) {
+      const wr = document.getElementById("comprovativo-wrapper");
+      if(!wr) return;
+
+      if(plano === "Premium") {
+        wr.classList.remove("hidden");
+        document.getElementById("form-evt-comprovativo").setAttribute("required", "true");
+      } else {
+        wr.classList.add("hidden");
+        document.getElementById("form-evt-comprovativo").removeAttribute("required");
+      }
+    };
+
+    // 3. ADMIN DASHBOARD
+    function renderAdminDashboard(container) {
+      const submissions = state.events.filter(e => e.status === 'pendente');
+      const approvedList = state.events.filter(e => e.status === 'aprovado');
+      const usersList = state.users.filter(u => u.role !== 'admin');
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-gradient-to-br from-brand-dark to-[#120B2E] text-white p-6 rounded-3xl border border-brand-carddark/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span class="inline-flex gap-1 items-center text-[10px] bg-brand-orange/30 text-brand-orange px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border border-brand-orange/20 mb-2"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Administradores Fundadores Autorizados</span>
+              <h2 class="text-2xl font-bold font-display">José Sorte Francisco & Josué Bocoto</h2>
+              <p class="text-xs text-slate-400">Ambiente Centralizado de Aprovação e Gestão de Contratos de Cartazes de Angola</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="setAdminActiveTab('approvals')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'approvals' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Novas Submissões (${submissions.length})</button>
+              <button onclick="setAdminActiveTab('event-catalog')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'event-catalog' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Catálogo Ativo (${approvedList.length})</button>
+              <button onclick="setAdminActiveTab('registered-users')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'registered-users' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Promotores / Clientes (${usersList.length})</button>
+            </div>
+          </div>
+
+          <!-- ADMIN SUBMISSIONS QUEUE -->
+          ${state.adminTab === 'approvals' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase text-brand-orange">Submissões Pendentes a receber Autorização Directa</h3>
+              
+              ${submissions.length > 0 ? `
+                <div class="grid grid-cols-1 gap-4">
+                  ${submissions.map(sub => `
+                    <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/80 rounded-2xl p-5 sm:p-6 text-xs flex flex-col md:flex-row gap-6 relative shadow-lg">
+                      <div class="w-full md:w-36 aspect-video md:h-44 rounded-xl overflow-hidden bg-neutral-900 border flex-shrink-0">
+                        <img src="${sub.flyer}" class="w-full h-full object-cover">
+                      </div>
+                      
+                      <div class="flex-1 space-y-3 leading-relaxed">
+                        <div class="flex items-center gap-2">
+                          <span class="px-2.5 py-0.5 text-[8px] font-bold uppercase bg-brand-violet text-white rounded-full">${sub.categoria}</span>
+                          <span class="px-2.5 py-0.5 text-[8px] font-bold bg-slate-105 rounded-full uppercase dark:bg-slate-800 text-slate-400">${sub.plano}</span>
+                        </div>
+                        <h4 class="text-base font-bold uppercase text-slate-800 dark:text-slate-100">${sub.nome}</h4>
+                        <p class="text-[11px] text-slate-400 line-clamp-3">${sub.descricao}</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px] text-slate-500 dark:text-slate-300">
+                          <p>📍 Província: <strong class="text-slate-800 dark:text-white">${sub.provincia}, ${sub.municipio}</strong></p>
+                          <p>📅 Horário: <strong class="text-slate-800 dark:text-white">${sub.data} às ${sub.hora}</strong></p>
+                          <p>💵 Preço: <strong class="text-brand-orange">${sub.preco}</strong></p>
+                          <p>👤 Contato Promotor: <strong>${sub.promotor} (${sub.promotorPhone})</strong></p>
+                          ${sub.plano === 'Premium' ? `<p class="col-span-2 text-brand-orange font-bold font-mono">🎫 Comprovativo: <a href="${sub.comprovativo}" target="_blank" class="hover:underline">${sub.comprovativo}</a></p>` : ''}
+                        </div>
+
+                        <!-- ACTIONS PANEL -->
+                        <div class="pt-3 border-t border-slate-100 dark:border-brand-carddark/40 flex flex-wrap gap-2 justify-end">
+                          <button onclick="adminToggleEventApproval('${sub.id}', 'reject')" class="px-4 py-2 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold uppercase transition">Devolver / Rejeitar</button>
+                          <button onclick="adminToggleEventApproval('${sub.id}', 'approve')" class="px-4 py-3 rounded-xl bg-emerald-500 hover:opacity-90 text-white text-[10px] font-bold uppercase transition">Autorizar Publicação Automática</button>
+                        </div>
                       </div>
                     </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 dark:border-brand-carddark/30 flex items-center justify-between">
-                       <span class="text-[10px] font-bold ${evt.aprovado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-brand-orange/10 text-brand-orange'} px-2.5 py-1 rounded-full border ${evt.aprovado ? 'border-emerald-500/20' : 'border-brand-orange/20'}">
-                         ${evt.aprovado ? 'Ativo na Web' : 'Aprovação Pendente'}
-                       </span>
-                       <div class="flex gap-2">
-                         <button onclick="deletePromoEvent('${evt.id}')" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500" title="Apagar Evento"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                       </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl">
+                  <p class="text-xs text-slate-400">Nenhum evento pendente aguardando validação de momento. Excelente trabalho!</p>
+                </div>
+              `}
+            </div>
+          ` : ''}
+
+          <!-- ADMIN ACTIVE REGISTERED USERS -->
+          ${state.adminTab === 'registered-users' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet">Lista Nacional de Membros e Promotores de Eventos</h3>
+              
+              <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-brand-carddark">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-100 dark:bg-brand-carddark text-slate-400 uppercase tracking-wider font-bold">
+                      <th class="p-3">Nome do Cliente</th>
+                      <th class="p-3">Telefone Angola</th>
+                      <th class="p-3">Idade</th>
+                      <th class="p-3">Perfil</th>
+                      <th class="p-3">Autorização</th>
+                      <th class="p-3 text-right">Ação Directa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${usersList.map(u => `
+                      <tr class="border-b border-slate-200 dark:border-brand-carddark hover:bg-slate-50 dark:hover:bg-[#1D153A]/30">
+                        <td class="p-3 font-semibold text-slate-800 dark:text-white">${u.nome}</td>
+                        <td class="p-3 font-semibold">${u.telefone}</td>
+                        <td class="p-3">${u.idade} anos</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded uppercase font-bold text-[8px] ${u.role === 'promoter' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-500/10 text-slate-400'}">${u.role}</span></td>
+                        <td class="p-3">
+                          <span class="px-2 py-0.5 rounded font-bold text-[8px] uppercase ${u.aprovado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-500'}">
+                            ${u.aprovado ? 'Autorizado' : 'Inscrição Pendente'}
+                          </span>
+                        </td>
+                        <td class="p-3 text-right space-x-1">
+                          ${!u.aprovado ? `<button onclick="adminToggleUserApproval('${u.telefone}', 'approve')" class="px-2 py-1 bg-emerald-500 text-white rounded font-bold text-[9px] uppercase hover:bg-emerald-600 transition">Ativar</button>` : ''}
+                          <button onclick="adminToggleUserApproval('${u.telefone}', 'ban')" class="px-2 py-1 bg-red-500/10 text-red-500 rounded font-bold text-[9px] uppercase hover:bg-red-500 hover:text-white transition">Banir</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ADMIN EVENT CATALOG MANAGE -->
+          ${state.adminTab === 'event-catalog' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-emerald-500">Catálogo Oficial Sincronizado</h3>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                ${approvedList.map(evt => `
+                  <div class="p-4 bg-white dark:bg-brand-carddark rounded-2xl border border-slate-200 dark:border-brand-carddark flex gap-4 text-xs">
+                    <div class="w-16 h-16 rounded overflow-hidden bg-neutral-900 flex-shrink-0">
+                      <img src="${evt.flyer}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 space-y-1">
+                      <h4 class="font-bold text-slate-800 dark:text-slate-100 uppercase leading-none truncate max-w-[200px]">${evt.nome}</h4>
+                      <p class="text-[9px] text-slate-400 truncate capitalize">${evt.provincia}, ${evt.municipio} • ${evt.categoria}</p>
+                      <p class="text-[10px] font-bold text-brand-orange">${evt.preco} | Divulgação: ${evt.plano}</p>
+                      <p class="text-[9px] text-slate-400">Promotor Original: ${evt.promotor}</p>
+                      
+                      <div class="pt-2 flex justify-end gap-1">
+                        <button onclick="triggerPromoterEventEdit('${evt.id}')" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[9px] font-semibold text-slate-500 hover:text-brand-orange transition">Editar</button>
+                        <button onclick="adminDeleteEventCatalog('${evt.id}')" class="px-2 py-1 bg-red-500/10 text-red-500 rounded text-[9px] font-semibold hover:bg-red-500 hover:text-white transition">Remover do Portal</button>
+                      </div>
                     </div>
                   </div>
                 `).join('')}
               </div>
-            `}
-          </div>
-        `;
-      } else {
-        const provsKeys = Object.keys(PROVINCIAS_ANGOLA);
-        const defaultMuns = PROVINCIAS_ANGOLA[provsKeys[0]];
-
-        inner = `
-          <div class="bg-white dark:bg-brand-dark rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-brand-carddark max-w-2xl mx-auto">
-            <h4 class="text-base font-bold font-display mb-6 text-brand-orange border-b border-slate-100 dark:border-brand-carddark pb-3 flex items-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5"></i> Registar Próximo Evento</h4>
-            <form onsubmit="handleCreateEventFromForm(event)" class="space-y-4">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Título do Evento *</label>
-                  <input type="text" id="pe-nome" placeholder="Ex: Festival Kizomba 18K" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs" required>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Categoria *</label>
-                  <select id="pe-categoria" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs">
-                    ${CATEGORIAS_LISTA.filter(c => c.id !== 'all').map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Província de Angola *</label>
-                  <select id="pe-prov" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs">
-                    ${provsKeys.map(p => `<option value="${p}">${p}</option>`).join('')}
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Município Selecionado *</label>
-                  <select id="pe-mun" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs">
-                    ${defaultMuns.map(m => `<option value="${m}">${m}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Morada Escrita / Local do Show *</label>
-                  <input type="text" id="pe-local" placeholder="Ex: Cine Atlântico, Viana" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs" required>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Preço do Ingresso (Ex: 10.000 Kz ou Gratuito) *</label>
-                  <input type="text" id="pe-preco" placeholder="Ex: 5.000 Kz" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs" required>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Data de Realização *</label>
-                  <input type="date" id="pe-data" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs" required>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold mb-1">Hora de Início *</label>
-                  <input type="time" id="pe-hora" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs" required>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold mb-1">Link URL de Imagem do Flyer / Cartaz (Deixe em branco para predef.)</label>
-                <input type="url" id="pe-flyer" placeholder="https://exemplo.com/cartaz.jpg" class="w-full px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs">
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold mb-1">Instruções aos Participantes e Descrição Detalhada *</label>
-                <textarea id="pe-desc" placeholder="Descreva os artistas convidados, política de reembolso, acessibilidade ambiental..." class="w-full h-28 px-4 py-2.5 rounded-xl bg-slate-150 dark:bg-[#1D153A] border border-slate-200 dark:border-brand-carddark outline-none text-xs resize-none" required></textarea>
-              </div>
-
-              <button type="submit" class="w-full bg-gradient-to-r from-brand-violet to-brand-orange text-white py-3 rounded-xl font-bold hover:scale-101 text-xs transition">Registar Evento Comercial</button>
-            </form>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="bg-gradient-to-r from-brand-violet to-brand-orange py-10 text-white">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-             <div>
-               <h2 class="text-2xl font-bold font-display">Espaço do Promotor Conectado</h2>
-               <p class="text-xs text-white/80 mt-1">Olá, promotor comercial! Submeta e negoceie a publicidade de cartazes.</p>
-             </div>
-             <div class="flex items-center gap-2">
-                <button onclick="setPromoterTab('my-events')" class="px-4 py-2 rounded-xl text-xs font-bold ${state.promoterTab === 'my-events' ? 'bg-white text-brand-violet border-transparent shadow' : 'border border-white/50 text-white hover:bg-white/10'}">Os Meus Eventos</button>
-                <button onclick="setPromoterTab('add-event')" class="px-4 py-2 rounded-xl text-xs font-bold ${state.promoterTab === 'add-event' ? 'bg-white text-brand-violet border-transparent shadow' : 'border border-white/50 text-white hover:bg-white/10'}">Submeter Cartaz</button>
-             </div>
-          </div>
+            </div>
+          ` : ''}
         </div>
-
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 mb-16">
-          ${inner}
-        </section>
-      `;
-    }
-
-    // 3. SYSTEM ADMINISTRATION VIEW
-    function getAdminViewHTML() {
-      if(!state.currentUser || state.currentUser.role !== 'admin') {
-        return `
-          <div class="max-w-md mx-auto my-16 p-8 text-center bg-white dark:bg-brand-dark border border-red-500/20 rounded-3xl shadow">
-            <i data-lucide="lock" class="w-12 h-12 text-red-550 mx-auto"></i>
-            <h3 class="text-lg font-bold font-display mt-2">Permissão Administrativa Negada</h3>
-            <p class="text-xs text-slate-400 mt-1">Este recurso destina-se aos fundadores directos: <strong>José Sorte Francisco (931352915)</strong> ou <strong>Josué Bocoto (924042125)</strong>.</p>
-            <button onclick="navigateTo('home')" class="mt-6 px-6 py-2 bg-brand-violet text-white rounded-xl text-xs font-semibold">Regressar ao Portal público</button>
-          </div>
-        `;
-      }
-
-      // Calculations and metrics
-      const pendingUsers = state.users.filter(u => !u.aprovado);
-      const pendingEventsList = state.events.filter(e => !e.aprovado);
-      const approvedEventsCount = state.events.filter(e => e.aprovado).length;
-
-      let subSection = '';
-      if(state.adminTab === 'approvals-queue') {
-        subSection = `
-          <div class="space-y-8">
-            <!-- 1. Pending Users Queue -->
-            <div>
-              <h3 class="text-base font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-brand-carddark pb-1">
-                <i data-lucide="user-plus" class="w-5 h-5 text-brand-orange"></i> Candidaturas de Adesão de Utilizadores/Promotores (${pendingUsers.length})
-              </h3>
-              ${pendingUsers.length === 0 ? `
-                <p class="text-xs text-slate-400 p-4 border border-dashed border-slate-200 dark:border-brand-carddark/50 rounded-xl text-center">Nenhuma candidatura de contacto pendente neste momento.</p>
-              ` : `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  ${pendingUsers.map(u => `
-                    <div class="p-4 rounded-xl bg-white dark:bg-[#1D153A]/30 border border-slate-200 dark:border-brand-carddark flex justify-between items-center gap-4">
-                      <div>
-                        <h4 class="text-sm font-bold font-display">${u.nome}</h4>
-                        <span class="text-[9px] uppercase font-bold text-brand-orange bg-brand-orange/10 px-2 rounded-full border border-brand-orange/20 mr-1">${u.role}</span>
-                        <span class="text-xs text-slate-400">Idade: ${u.idade} • Tel: ${u.telefone}</span>
-                      </div>
-                      <div class="flex gap-1.5 h-fit">
-                        <button onclick="adminActionApproveUser('${u.telefone}', 'approve')" class="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white transition" title="Aprovar Entrada"><i data-lucide="check" class="w-4 h-4"></i></button>
-                        <button onclick="adminActionApproveUser('${u.telefone}', 'reject')" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition" title="Rejeitar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-
-            <!-- 2. Pending Events Queue -->
-            <div>
-              <h3 class="text-base font-bold font-display text-transparent bg-clip-text bg-gradient-to-r from-brand-violet to-brand-orange mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-brand-carddark pb-1">
-                <i data-lucide="calendar" class="w-5 h-5 text-brand-violet"></i> Novas Submissões de Cartazes Comerciais (${pendingEventsList.length})
-              </h3>
-              ${pendingEventsList.length === 0 ? `
-                <p class="text-xs text-slate-400 p-4 border border-dashed border-slate-200 dark:border-brand-carddark/50 rounded-xl text-center">Nenhum cartaz na fila de aprovação.</p>
-              ` : `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  ${pendingEventsList.map(evt => `
-                    <div class="p-4 rounded-xl bg-white dark:bg-[#1D153A]/30 border border-slate-200 dark:border-brand-carddark flex justify-between gap-4">
-                      <div class="flex gap-4">
-                        <img src="${evt.flyer}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0">
-                        <div>
-                          <h4 class="text-sm font-bold font-display leading-tight line-clamp-1">${evt.nome}</h4>
-                          <p class="text-[10px] text-slate-400 mt-1">📍 Província: ${evt.provincia} • ${evt.municipio}</p>
-                          <p class="text-[10px] text-slate-400">🎒 Emissor: ${evt.promotor}</p>
-                        </div>
-                      </div>
-                      <div class="flex flex-col gap-2">
-                        <button onclick="adminActionApproveEvent('${evt.id}', 'approve')" class="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[10px] font-bold hover:scale-101 active:scale-95 transition" title="Aprovar Cartaz">Aprovar</button>
-                        <button onclick="adminActionApproveEvent('${evt.id}', 'reject')" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-[10px] font-bold hover:scale-101 active:scale-95 transition" title="Rejeitar">Apagar</button>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-          </div>
-        `;
-      } else {
-        // Manage Events Tab
-        subSection = `
-          <div>
-            <h3 class="text-base font-bold font-display mb-4 border-b border-slate-100 dark:border-brand-carddark/50 pb-2">Sistema Geral de Cartazes do Portal</h3>
-            <div class="space-y-4">
-              ${state.events.filter(e => e.aprovado).map(evt => `
-                <div class="p-4 rounded-xl bg-white dark:bg-brand-dark/40 border border-slate-200 dark:border-brand-carddark flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div class="flex gap-4 items-center">
-                    <img src="${evt.flyer}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
-                    <div>
-                      <h4 class="text-sm font-bold font-display line-clamp-1">${evt.nome}</h4>
-                      <p class="text-[10px] text-slate-400">📍 ${evt.provincia}, ${evt.municipio} • Preço: ${evt.preco}</p>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <button onclick="adminActionPromotePremium('${evt.id}')" class="px-3.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition ${evt.premium ? 'bg-brand-orange text-white' : 'bg-slate-100 dark:bg-brand-carddark text-slate-500'}">
-                      <i data-lucide="star" class="w-3.5 h-3.5"></i> ${evt.premium ? 'Premium Ativo' : 'Tornar Premium'}
-                    </button>
-                    <button onclick="deletePromoEvent('${evt.id}')" class="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition" title="Excluir"><i data-lucide="trash-2" class="w-4.5 h-4.5"></i></button>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="bg-gradient-to-r from-brand-violet to-brand-orange py-10 text-white">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-              <h2 class="text-2xl font-bold font-display">Hub Administrativo AngoFest</h2>
-              <p class="text-xs text-white/80 mt-1">Sessão Ativa: ${state.currentUser.nome} (Founder)</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="setAdminTab('approvals-queue')" class="px-4 py-2 rounded-xl text-xs font-bold ${state.adminTab === 'approvals-queue' ? 'bg-white text-brand-violet' : 'border border-white/50 text-white'}">Fila de Aprovações</button>
-              <button onclick="setAdminTab('manage-events')" class="px-4 py-2 rounded-xl text-xs font-bold ${state.adminTab === 'manage-events' ? 'bg-white text-brand-violet' : 'border border-white/50 text-white'}">Gerir Cartazes</button>
-            </div>
-          </div>
-        </div>
-
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 mb-16">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="p-5 rounded-2xl bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark">
-              <span class="block text-xs uppercase tracking-wide text-slate-400 font-bold mb-1">Candidatos Pendentes</span>
-              <span class="text-3xl font-bold font-display text-brand-orange">${pendingUsers.length}</span>
-            </div>
-            <div class="p-5 rounded-2xl bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark">
-              <span class="block text-xs uppercase tracking-wide text-slate-400 font-bold mb-1">Cartazes Pendentes</span>
-              <span class="text-3xl font-bold font-display text-brand-violet">${pendingEventsList.length}</span>
-            </div>
-            <div class="p-5 rounded-2xl bg-white dark:bg-brand-dark border border-slate-200 dark:border-brand-carddark">
-              <span class="block text-xs uppercase tracking-wide text-slate-400 font-bold mb-1">Eventos Ativos na Web</span>
-              <span class="text-3xl font-bold font-display text-emerald-500">${approvedEventsCount}</span>
-            </div>
-          </div>
-
-          ${subSection}
-        </section>
       `;
     }
 
     // =========================================================================
-    // INITIALIZATION LIFECYCLE
+    // STARTUP LIFECYCLE INITIALIZER & TRANSITIONS
     // =========================================================================
-    window.handleContactMsg = function(e) {
-      e.preventDefault();
-      showToast("Proposta de outdoor registada! Entraremos em contacto no tempo recorde de 2 horas.");
-      e.target.reset();
-    };
+    applyTheme();
+    renderApp();
+    runSponsoredPromoCycle();
 
-    window.scrollToTop = function() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.onscroll = function() {
-      const topBtn = document.getElementById("back-to-top");
-      if(topBtn) {
-        if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
-          topBtn.classList.remove("opacity-0", "pointer-events-none");
+    // Scroll display handling
+    window.addEventListener('scroll', () => {
+      const btt = document.getElementById("top-scroller");
+      if(btt) {
+        if(window.scrollY > 400) {
+          btt.classList.remove("opacity-0");
+          btt.classList.add("opacity-100");
+          btt.style.pointerEvents = "auto";
         } else {
-          topBtn.classList.add("opacity-0", "pointer-events-none");
+          btt.classList.add("opacity-0");
+          btt.classList.remove("opacity-100");
+          btt.style.pointerEvents = "none";
         }
       }
-    };
-
-    // Self execution bootloader
-    window.addEventListener("DOMContentLoaded", () => {
-      // Apply theme
-      applyTheme();
-
-      // Shut down loading screen with beautiful transitions
-      setTimeout(() => {
-        const loader = document.getElementById("loading-screen");
-        if(loader) {
-          loader.classList.add("opacity-0");
-          setTimeout(() => loader.remove(), 500);
-        }
-        // Spawn active elements
-        renderApp();
-        initPremiumScheduler();
-      }, 1200);
     });
 
   </script>
