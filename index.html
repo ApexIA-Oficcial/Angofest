@@ -638,7 +638,14 @@
               try {
                 const userDoc = await getDoc(doc(db, "users", phone));
                 if (userDoc.exists()) {
-                  state.currentUser = userDoc.data();
+                  const dbUser = userDoc.data();
+                  if (dbUser.role !== 'admin' && !dbUser.aprovado) {
+                    await signOut(auth);
+                    state.currentUser = null;
+                    renderApp();
+                    return;
+                  }
+                  state.currentUser = dbUser;
                   renderApp();
                 }
               } catch (err) {
@@ -1740,18 +1747,6 @@
               </button>
             </form>
 
-            <div class="p-3 bg-brand-violet/5 dark:bg-brand-violet/10 border border-brand-violet/20 rounded-2xl text-left">
-              <span class="block text-[10px] font-bold text-brand-orange uppercase tracking-wider mb-2"><i data-lucide="shield-check" class="w-3.5 h-3.5 inline mr-1 text-brand-orange"></i> Contas de Demonstração / Teste:</span>
-              <div class="grid grid-cols-2 gap-2 text-[10px]">
-                <button onclick="document.getElementById('login-form-phone').value='931352915'; document.getElementById('login-form-pass').value='123456';" class="p-2 bg-slate-100 dark:bg-brand-dark/40 hover:bg-brand-violet/20 border border-slate-200 dark:border-brand-violet/30 text-slate-800 dark:text-white rounded-xl transition text-[9px] font-bold text-center">
-                  🛠️ Admin Teste
-                </button>
-                <button onclick="document.getElementById('login-form-phone').value='900000000'; document.getElementById('login-form-pass').value='123456';" class="p-2 bg-slate-100 dark:bg-brand-dark/40 hover:bg-brand-violet/20 border border-slate-200 dark:border-brand-violet/30 text-slate-800 dark:text-white rounded-xl transition text-[9px] font-bold text-center">
-                  📣 Promotor Teste
-                </button>
-              </div>
-              <p class="text-[9px] text-slate-400 text-center mt-2">Clique numa conta para preencher e depois selecione 'Iniciar Sessão'</p>
-            </div>
             <div class="text-center pt-3 border-t border-slate-200 dark:border-brand-carddark text-xs">
               <p class="text-slate-400">Ainda não possui conta de promotor ou membro?</p>
               <button onclick="openAuthDialog('register')" class="text-brand-orange font-bold hover:underline mt-1.5 focus:outline-none">Registe-se aqui</button>
@@ -2341,16 +2336,25 @@
     };
 
     window.uploadToStorageOrBase64 = async function(file, folderPath) {
+      const getBase64Fallback = (f) => new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300");
+        reader.onerror = () => resolve("https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=300");
+        reader.readAsDataURL(f);
+      });
+
       if (typeof file === "string" && file.startsWith("data:")) {
         if (fbActive && storage) {
           try {
             const response = await fetch(file);
             const blob = await response.blob();
             const fileRef = ref(storage, `${folderPath}/${Date.now()}_ia_poster.jpg`);
-            const snapshot = await uploadBytes(fileRef, blob);
-            return await getDownloadURL(snapshot.ref);
+            const uploadPromise = uploadBytes(fileRef, blob).then(snapshot => getDownloadURL(snapshot.ref));
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout storage")), 3000));
+            return await Promise.race([uploadPromise, timeoutPromise]);
           } catch(err) {
-            console.error("Erro ao subir cartaz base64:", err);
+            console.error("Erro ao subir cartaz base64 de imagem:", err);
+            return file;
           }
         }
         return file;
@@ -2359,20 +2363,17 @@
       if (fbActive && storage) {
         try {
           const fileRef = ref(storage, `${folderPath}/${Date.now()}_${file.name}`);
-          const snapshot = await uploadBytes(fileRef, file);
-          return await getDownloadURL(snapshot.ref);
+          const uploadPromise = uploadBytes(fileRef, file).then(snapshot => getDownloadURL(snapshot.ref));
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout storage")), 3000));
+          return await Promise.race([uploadPromise, timeoutPromise]);
         } catch (error) {
           console.error("Erro ao fazer upload para o Firebase Storage:", error);
-          showToast("Erro de rede no upload, convertendo para cópia offline.", "warning");
+          showToast("Rede indisponível para upload directo, convertendo para imagem offline.", "warning");
+          return await getBase64Fallback(file);
         }
       }
       
-      // Fallback: Base64 string for offline session persistence
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
+      return await getBase64Fallback(file);
     };
 
     window.handleInAppRegister = async function(e) {
@@ -2386,6 +2387,11 @@
 
       if(phone.length < 9) {
         showToast("Insira um telefone angolano com 9 dígitos regulares.", "error");
+        return;
+      }
+
+      if(pass.length < 6) {
+        showToast("Por razões de segurança, a sua palavra-passe deve ter pelo menos 6 caracteres.", "error");
         return;
       }
 
@@ -2538,34 +2544,38 @@
       saveState();
       
       if(fbActive && auth && createUserWithEmailAndPassword) {
-        (async () => {
-          try {
-            // First create the authentication login credentials in Firebase Auth
-            await createUserWithEmailAndPassword(auth, `${phone}@angofest.co.ao`, pass);
-            
-            // Now save the custom user profile document configuration to Firestore
-            await setDoc(doc(db, "users", phone), newUserObj);
-            
-            if (role === 'designer') {
-              await setDoc(doc(db, "designers", phone), newUserObj);
-            } else if (role === 'promoter') {
-              await setDoc(doc(db, "promoters", phone), newUserObj);
-            } else if (role === 'outdoor_company') {
-              await setDoc(doc(db, "outdoor_clients", phone), newUserObj);
-            }
-          } catch (authErr) {
-            console.error("Erro ao sincronizar novo utilizador no Firebase Auth:", authErr);
-            // Fallback: save to Firestore anyway if email already exists or another transient error
-            try {
-              await setDoc(doc(db, "users", phone), newUserObj);
-              if (role === 'designer') await setDoc(doc(db, "designers", phone), newUserObj);
-              if (role === 'promoter') await setDoc(doc(db, "promoters", phone), newUserObj);
-              if (role === 'outdoor_company') await setDoc(doc(db, "outdoor_clients", phone), newUserObj);
-            } catch(e) {
-              console.error("Erro secundário Firestore:", e);
-            }
+        try {
+          // First create the authentication login credentials in Firebase Auth
+          await createUserWithEmailAndPassword(auth, `${phone}@angofest.co.ao`, pass);
+          
+          // Now save the custom user profile document configuration to Firestore
+          await setDoc(doc(db, "users", phone), newUserObj);
+          
+          if (role === 'designer') {
+            await setDoc(doc(db, "designers", phone), newUserObj);
+          } else if (role === 'promoter') {
+            await setDoc(doc(db, "promoters", phone), newUserObj);
+          } else if (role === 'outdoor_company') {
+            await setDoc(doc(db, "outdoor_clients", phone), newUserObj);
           }
-        })();
+        } catch (authErr) {
+          console.error("Erro ao sincronizar novo utilizador no Firebase:", authErr);
+          let errorMsg = "Falha ao registar a conta nos servidores de segurança.";
+          if (authErr.code === "auth/email-already-in-use") {
+            errorMsg = "Este número de telefone já possui registo activo.";
+          } else if (authErr.code === "auth/weak-password") {
+            errorMsg = "A palavra-passe deve possuir pelo menos 6 caracteres.";
+          } else if (authErr.code === "auth/invalid-email") {
+            errorMsg = "Número de telefone ou formato inválido.";
+          }
+          showToast(errorMsg, "error");
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+          }
+          return;
+        }
       }
 
       if (submitBtn) {
