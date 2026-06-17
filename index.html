@@ -471,6 +471,7 @@
       sales: [],
       messages: [],
       complaints: [],
+      banned: [],
       subscriptions: [],
       payments: [],
       ratings: [],
@@ -630,6 +631,14 @@
           renderApp();
         });
 
+        const bannedCol = collection(db, "banned");
+        onSnapshot(bannedCol, (snap) => {
+          const list = [];
+          snap.forEach(d => list.push(d.data()));
+          state.banned = list;
+          renderApp();
+        });
+
         // Set up real-time session recovery via Firebase Auth
         if (auth && onAuthStateChanged) {
           onAuthStateChanged(auth, async (firebaseUser) => {
@@ -639,6 +648,13 @@
                 const userDoc = await getDoc(doc(db, "users", phone));
                 if (userDoc.exists()) {
                   const dbUser = userDoc.data();
+                  const isBannedObj = (state.banned || []).some(b => b.telefone === phone);
+                  if (isBannedObj) {
+                    await signOut(auth);
+                    state.currentUser = null;
+                    renderApp();
+                    return;
+                  }
                   if (dbUser.role !== 'admin' && !dbUser.aprovado) {
                     await signOut(auth);
                     state.currentUser = null;
@@ -1384,8 +1400,11 @@
       // Create an image object to validate the dimensions
       const img = new Image();
       img.onload = function() {
-        if (img.width !== 1080 || img.height !== 1350) {
-          showToast("O cartaz deve estar no formato 1080x1350px para garantir a melhor apresentação.", "error");
+        const ratio = img.width / img.height;
+        const targetRatio = 1080 / 1350; // 0.8
+        const tolerance = 0.08; // 8% tolerance to support slight variations easily
+        if (Math.abs(ratio - targetRatio) > tolerance) {
+          showToast("O cartaz em anexo deve respeitar a proporção vertical de 4:5 (ex: 1080x1350px) para não deformar ou cortar.", "error");
           e.target.value = '';
           document.getElementById('flyer-preview-container').classList.add('hidden');
           document.getElementById('flyer-placeholder').classList.remove('hidden');
@@ -2243,6 +2262,17 @@
         origBtn.innerHTML = `⏳ Verificando credenciais...`;
       }
 
+      // Check if user is banned
+      const isBanned = (state.banned || []).some(b => b.telefone === phone);
+      if (isBanned) {
+         showToast("Este número de telefone foi bloqueado permanentemente pelos administradores da AngoFest.", "error");
+         if (origBtn) {
+           origBtn.disabled = false;
+           origBtn.innerHTML = origText;
+         }
+         return;
+      }
+
       if (fbActive && auth && signInWithEmailAndPassword) {
         try {
           // 1. Fetch user from Firestore to check approval
@@ -2273,8 +2303,25 @@
             return;
           }
 
-          // 2. Authenticate the user via Firebase Auth
-          await signInWithEmailAndPassword(auth, `${phone}@angofest.co.ao`, pass);
+          // 2. Authenticate the user via Firebase Auth (Self-recovering/Self-healing)
+          try {
+            await signInWithEmailAndPassword(auth, `${phone}@angofest.co.ao`, pass);
+          } catch (signInErr) {
+            console.warn("SignIn error, checking if user deserves Auto-Registration in Auth:", signInErr);
+            // If account doesn't exist in Auth backend but exists in Firestore with matching password, auto-create it!
+            if (signInErr.code === "auth/user-not-found" || signInErr.code === "auth/invalid-credential" || signInErr.code === "auth/user-disabled" || signInErr.code === "auth/invalid-email" || signInErr.code === "auth/wrong-password") {
+              try {
+                await createUserWithEmailAndPassword(auth, `${phone}@angofest.co.ao`, pass);
+                console.log(`Auto-created missing credentials in Auth for ${phone}`);
+              } catch (createErr) {
+                console.error("Failed dynamic Auth seed registration:", createErr);
+                throw signInErr; // rethrow original error if we couldn't create/repair either
+              }
+            } else {
+              throw signInErr;
+            }
+          }
+
           state.currentUser = user;
           saveState();
           closeModal();
@@ -2322,6 +2369,7 @@
         showToast(`Bem-vindo (Local), ${user.nome}! Início de sessão efetuado com sucesso.`);
         
         if(user.role === 'admin') {
+          navigateTo('admin-dashboard');
           navigateTo('admin-dashboard');
         } else if (user.role === 'promoter') {
           navigateTo('promoter-dashboard');
@@ -2384,6 +2432,12 @@
       const idade = idadeValue ? parseInt(idadeValue) : null;
       const role = document.getElementById("reg-form-role").value;
       const pass = document.getElementById("reg-form-pass").value.trim();
+
+      const isBanned = (state.banned || []).some(b => b.telefone === phone);
+      if (isBanned) {
+         showToast("Este número de telefone foi bloqueado permanentemente pelos administradores da AngoFest.", "error");
+         return;
+      }
 
       if(phone.length < 9) {
         showToast("Insira um telefone angolano com 9 dígitos regulares.", "error");
@@ -2784,7 +2838,7 @@
               ${approvedPremium.map(evt => `
                 <div class="min-w-[280px] sm:min-w-[360px] snap-start bg-white dark:bg-brand-carddark flex flex-col rounded-2xl border border-slate-200 dark:border-brand-carddark overflow-hidden shadow-md relative group hover:scale-[1.01] transition duration-200">
                   <div class="absolute top-2 right-2 z-10 bg-brand-orange/90 text-white text-[8px] font-bold py-1 px-2.5 rounded-full uppercase tracking-wider">Premium</div>
-                  <div class="aspect-video relative overflow-hidden bg-slate-900">
+                  <div class="relative overflow-hidden bg-slate-900" style="aspect-ratio: 4/5;">
                     <img src="${evt.flyer}" alt="Flyer" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div class="absolute bottom-2 left-2 text-white">
@@ -2878,7 +2932,7 @@
                     <div class="absolute top-3 left-3 bg-brand-orange text-white text-[8px] font-bold py-1 px-2.5 rounded-full tracking-wider uppercase z-10 shadow-md">Premium Destaque</div>
                   ` : ''}
 
-                  <div class="aspect-video relative overflow-hidden bg-neutral-900">
+                  <div class="relative overflow-hidden bg-neutral-900" style="aspect-ratio: 4/5;">
                     <img src="${evt.flyer}" alt="Flyer" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                     <div class="absolute bottom-3 left-3 flex gap-2">
@@ -3184,7 +3238,7 @@
                         <div class="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition flex items-center justify-center text-[9px] text-white font-bold">Alterar Cartaz</div>
                       </div>
                     </div>
-                    <p id="flyer-dimension-info" class="hidden text-[10px] text-emerald-500 font-semibold mt-1">✓ Dimensão perfeita de cartaz validada: 1080x1350px</p>
+                    <p id="flyer-dimension-info" class="hidden text-[10px] text-emerald-500 font-semibold mt-1">✓ Proporção vertical perfeita de cartaz (4:5) validada com sucesso.</p>
                   </div>
 
                   <!-- SUBSECTION 2: IA GENERATOR FORM -->
@@ -4123,20 +4177,27 @@
       const submissions = state.events.filter(e => e.status === 'pendente');
       const approvedList = state.events.filter(e => e.status === 'aprovado');
       const usersList = state.users.filter(u => u.role !== 'admin');
+      
+      const promotersAndClients = state.users.filter(u => u.role !== 'admin' && (u.role === 'promoter' || u.role === 'user'));
+      const designersList = state.users.filter(u => u.role === 'designer');
+      const outdoorsList = state.users.filter(u => u.role === 'outdoor_company');
 
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="bg-gradient-to-br from-brand-dark to-[#120B2E] text-white p-6 rounded-3xl border border-brand-carddark/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="bg-gradient-to-br from-brand-dark to-[#120B2E] text-white p-6 rounded-3xl border border-brand-carddark/80 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div>
-              <span class="inline-flex gap-1 items-center text-[10px] bg-brand-orange/30 text-brand-orange px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border border-brand-orange/20 mb-2"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Administradores Fundadores Autorizados</span>
+              <span class="inline-flex gap-1 items-center text-[10px] bg-brand-orange/30 text-brand-orange px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border border-brand-orange/20 mb-2"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Administradores Centralizados</span>
               <h2 class="text-2xl font-bold font-display">José Sorte Francisco & Josué Bocoto</h2>
-              <p class="text-xs text-slate-400">Ambiente Centralizado de Aprovação e Gestão de Contratos de Cartazes de Angola</p>
+              <p class="text-xs text-slate-400">Ambiente de Controlo da AngoFest: Painel Unificado de Gestão de Contratos, Eventos e Parceiros</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="setAdminActiveTab('approvals')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'approvals' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Novas Submissões (${submissions.length})</button>
-              <button onclick="setAdminActiveTab('event-catalog')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'event-catalog' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Catálogo Ativo (${approvedList.length})</button>
-              <button onclick="setAdminActiveTab('registered-users')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'registered-users' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Promotores / Clientes (${usersList.length})</button>
-              <button onclick="setAdminActiveTab('referrals-log')" class="px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition ${state.adminTab === 'referrals-log' ? 'bg-brand-orange text-white' : 'bg-white/10 text-white' }">Relatório de Embaixadores</button>
+            <div class="flex flex-wrap gap-1.5 bg-black/40 p-1 rounded-2xl border border-slate-800">
+              <button onclick="setAdminActiveTab('approvals')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'approvals' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">📢 Eventos (${submissions.length})</button>
+              <button onclick="setAdminActiveTab('event-catalog')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'event-catalog' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">📂 Catálogo (${approvedList.length})</button>
+              <button onclick="setAdminActiveTab('registered-users')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'registered-users' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">👥 Promotores (${promotersAndClients.length})</button>
+              <button onclick="setAdminActiveTab('designers')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'designers' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">🎨 Designers (${designersList.length})</button>
+              <button onclick="setAdminActiveTab('outdoors')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'outdoors' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">🏢 Outdoors (${outdoorsList.length})</button>
+              <button onclick="setAdminActiveTab('complaints')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'complaints' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">⚠️ Reclamações (${state.complaints ? state.complaints.length : 0})</button>
+              <button onclick="setAdminActiveTab('referrals-log')" class="px-3 py-2 rounded-xl text-[9px] font-bold uppercase transition ${state.adminTab === 'referrals-log' ? 'bg-brand-orange text-white' : 'hover:bg-white/10 text-slate-400 hover:text-white' }">💵 Pagamentos</button>
             </div>
           </div>
 
@@ -4149,7 +4210,7 @@
                 <div class="grid grid-cols-1 gap-4">
                   ${submissions.map(sub => `
                     <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/80 rounded-2xl p-5 sm:p-6 text-xs flex flex-col md:flex-row gap-6 relative shadow-lg">
-                      <div class="w-full md:w-36 aspect-video md:h-44 rounded-xl overflow-hidden bg-neutral-900 border flex-shrink-0">
+                      <div class="w-full md:w-36 rounded-xl overflow-hidden bg-neutral-900 border flex-shrink-0" style="aspect-ratio: 4/5;">
                         <img src="${sub.flyer}" class="w-full h-full object-cover">
                       </div>
                       
@@ -4206,9 +4267,9 @@
           <!-- ADMIN ACTIVE REGISTERED USERS -->
           ${state.adminTab === 'registered-users' ? `
             <div class="space-y-4">
-              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet">Lista Nacional de Membros e Promotores de Eventos</h3>
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet">Lista Nacional de Promotores de Eventos</h3>
               
-              <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-brand-carddark">
+              <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-brand-carddark bg-white dark:bg-brand-dark/20 shadow">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr class="bg-slate-100 dark:bg-brand-carddark text-slate-400 uppercase tracking-wider font-bold">
@@ -4221,25 +4282,147 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${usersList.map(u => `
+                    ${promotersAndClients.length > 0 ? promotersAndClients.map(u => `
                       <tr class="border-b border-slate-200 dark:border-brand-carddark hover:bg-slate-50 dark:hover:bg-[#1D153A]/30">
-                        <td class="p-3 font-semibold text-slate-800 dark:text-white">${u.nome}</td>
-                        <td class="p-3 font-semibold">${u.telefone}</td>
-                        <td class="p-3">${u.idade} anos</td>
-                        <td class="p-3"><span class="px-2 py-0.5 rounded uppercase font-bold text-[8px] ${u.role === 'promoter' ? 'bg-purple-500/10 text-purple-400' : 'bg-slate-500/10 text-slate-400'}">${u.role}</span></td>
+                        <td class="p-3 font-semibold text-slate-800 dark:text-white">
+                          <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
+                              <img src="${u.logoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80'}" class="w-full h-full object-cover">
+                            </div>
+                            <span>${u.nome}</span>
+                          </div>
+                        </td>
+                        <td class="p-3 font-bold text-slate-700 dark:text-slate-300">${u.telefone}</td>
+                        <td class="p-3">${u.idade || 'N/A'} anos</td>
+                        <td class="p-3"><span class="px-2.5 py-0.5 rounded uppercase font-bold text-[8px] ${u.role === 'promoter' ? 'bg-purple-500/15 text-purple-400' : 'bg-slate-500/15 text-slate-400'}">${u.role === 'promoter' ? 'Promotor de Festas' : 'Utilizador / Membro'}</span></td>
                         <td class="p-3">
                           <span class="px-2 py-0.5 rounded font-bold text-[8px] uppercase ${u.aprovado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-500'}">
                             ${u.aprovado ? 'Autorizado' : 'Inscrição Pendente'}
                           </span>
                         </td>
                         <td class="p-3 text-right space-x-1">
-                          ${!u.aprovado ? `<button onclick="adminToggleUserApproval('${u.telefone}', 'approve')" class="px-2 py-1 bg-emerald-500 text-white rounded font-bold text-[9px] uppercase hover:bg-emerald-600 transition">Ativar</button>` : ''}
-                          <button onclick="adminToggleUserApproval('${u.telefone}', 'ban')" class="px-2 py-1 bg-red-500/10 text-red-500 rounded font-bold text-[9px] uppercase hover:bg-red-500 hover:text-white transition">Banir</button>
+                          ${!u.aprovado ? `<button onclick="adminToggleUserApproval('${u.telefone}', 'approve')" class="px-2.5 py-1 bg-emerald-500 text-white rounded-lg font-bold text-[9px] uppercase hover:bg-emerald-600 transition">Aprovar</button>` : ''}
+                          <button onclick="adminToggleUserApproval('${u.telefone}', 'ban')" class="px-2.5 py-1 bg-red-500/10 text-red-500 rounded-lg font-bold text-[9px] uppercase hover:bg-red-500 hover:text-white transition">Banir</button>
                         </td>
                       </tr>
-                    `).join('')}
+                    `).join('') : `
+                      <tr>
+                        <td colspan="6" class="p-6 text-center text-slate-400">Sem promotores registados.</td>
+                      </tr>
+                    `}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ADMIN DESIGNERS MANAGE TAB -->
+          ${state.adminTab === 'designers' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet">Portfólios e Candidaturas de Designers Parceiros</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${designersList.length > 0 ? designersList.map(u => `
+                  <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-2xl p-5 flex gap-4 text-xs hover:border-brand-violet/40 transition">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex-shrink-0" style="aspect-ratio: 1/1;">
+                      <img src="${u.logoUrl || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80'}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 space-y-1.5 min-w-0">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 bg-brand-violet/10 text-brand-violet text-[8px] font-bold uppercase rounded-full">${u.especialidade || 'Design Geral'}</span>
+                        <span class="font-bold text-[8px] uppercase px-2 py-0.5 rounded ${u.aprovado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-500'}">
+                          ${u.aprovado ? 'Ativo no Catálogo' : 'Aguardando Aprovação'}
+                        </span>
+                      </div>
+                      <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate leading-snug">${u.nome}</h4>
+                      <p class="text-slate-400 text-[10px]">Tel/WhatsApp: <strong class="text-slate-800 dark:text-white">${u.telefone}</strong></p>
+                      <p class="text-[10px] text-slate-400">Preço Base: <strong class="text-brand-orange">${u.precoBase ? u.precoBase.toLocaleString() : '12.000'} Kz</strong></p>
+                      
+                      ${u.portfolio ? `
+                        <p class="truncate text-[10px] text-brand-violet font-semibold"><i data-lucide="link" class="inline w-3 h-3"></i> <a href="${u.portfolio}" target="_blank" class="hover:underline">${u.portfolio}</a></p>
+                      ` : ''}
+
+                      <div class="pt-2 border-t border-slate-105 dark:border-[#1F1942]/40 flex justify-end gap-1.5">
+                        ${!u.aprovado ? `<button onclick="adminToggleUserApproval('${u.telefone}', 'approve')" class="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase hover:bg-emerald-600 transition">Aprovar Designer</button>` : ''}
+                        <button onclick="adminToggleUserApproval('${u.telefone}', 'ban')" class="px-2.5 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold uppercase hover:bg-red-500 hover:text-white transition">Banir</button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('') : `
+                  <div class="col-span-2 p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl bg-slate-50 dark:bg-brand-carddark/20 text-slate-400">
+                    <p class="text-xs">Nenhum designer de cartazes registado na plataforma de momento.</p>
+                  </div>
+                `}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ADMIN OUTDOORS MANAGER TAB -->
+          ${state.adminTab === 'outdoors' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-violet">Proprietários e Gestão de Outdoors / Painéis de Publicidade</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${outdoorsList.length > 0 ? outdoorsList.map(u => `
+                  <div class="bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/60 rounded-2xl p-5 flex flex-col sm:flex-row gap-4 text-xs hover:border-brand-violet/40 transition">
+                    <div class="w-full sm:w-28 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex-shrink-0" style="aspect-ratio: 4/3;">
+                      <img src="${u.outdoorFotoUrl || 'https://images.unsplash.com/photo-1541535650810-10d26f597a65?auto=format&fit=crop&w=300&q=80'}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 space-y-1.5 min-w-0">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 bg-brand-orange/10 text-brand-orange text-[8px] font-bold uppercase rounded-full">Painel LED - Outdoor</span>
+                        <span class="font-bold text-[8px] uppercase px-2 py-0.5 rounded ${u.aprovado ? 'bg-emerald-500/10 text-emerald-500' : 'bg-yellow-500/10 text-yellow-500'}">
+                          ${u.aprovado ? 'Autorizado' : 'Aguardando Validação'}
+                        </span>
+                      </div>
+                      <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate leading-snug">${u.outdoorEmpresa || 'Angola Outdoors'}</h4>
+                      <p class="text-[10px] text-slate-400">Responsável: <span class="font-semibold text-slate-605 dark:text-white">${u.nome}</span></p>
+                      <p class="text-[10px] text-slate-400">Localização: <strong class="text-slate-800 dark:text-white">${u.provincia || 'Luanda'}, ${u.localizacao || 'Largo Central'}</strong></p>
+                      <p class="text-[10px] text-slate-400">Dimensões: <strong class="text-slate-800 dark:text-white">${u.dimensoes || '8m x 4m'}</strong></p>
+                      <p class="text-[10px] text-slate-400">Preço Semanal: <span class="text-brand-orange font-bold">${u.precoSemanal ? u.precoSemanal.toLocaleString() : '150.000'} Kz</span> | Mensal: <span class="text-brand-orange font-bold">${u.precoMensal ? u.precoMensal.toLocaleString() : '500.000'} Kz</span></p>
+                      <p class="text-[10px] text-slate-400">Contacto: <strong class="text-slate-800 dark:text-white">${u.telefone}</strong></p>
+
+                      <div class="pt-2 border-t border-slate-100 dark:border-[#1F1942]/40 flex justify-end gap-1.5">
+                        ${!u.aprovado ? `<button onclick="adminToggleUserApproval('${u.telefone}', 'approve')" class="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase hover:bg-emerald-600 transition">Aprovar Local</button>` : ''}
+                        <button onclick="adminToggleUserApproval('${u.telefone}', 'ban')" class="px-2.5 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-bold uppercase hover:bg-red-500 hover:text-white transition">Banir</button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('') : `
+                  <div class="col-span-2 p-12 text-center border-2 border-dashed border-slate-305 dark:border-brand-carddark rounded-2xl bg-slate-50 dark:bg-brand-carddark/20 text-slate-400">
+                    <p class="text-xs">Nenhum proprietário de outdoor cadastrado de momento.</p>
+                  </div>
+                `}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ADMIN COMPLAINTS TAB -->
+          ${state.adminTab === 'complaints' ? `
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold font-display uppercase tracking-wider text-brand-orange">⚠️ Reclamações e Denúncias Registadas pelos Clientes</h3>
+              
+              <div class="space-y-3">
+                ${state.complaints && state.complaints.length > 0 ? state.complaints.map(comp => `
+                  <div class="p-5 bg-white dark:bg-brand-carddark border border-slate-200 dark:border-brand-carddark/50 rounded-2xl space-y-3 text-left animate-fade-in">
+                    <div class="flex items-center justify-between flex-wrap gap-2 text-[10px]">
+                      <span class="inline-block gap-1 items-center bg-red-500/10 text-red-500 px-2.5 py-0.5 rounded font-bold uppercase">Denúncia / Queixa</span>
+                      <span class="text-slate-400 font-semibold uppercase">${comp.dataStr || 'Hoje'}</span>
+                    </div>
+                    <div class="space-y-1 text-xs font-sans">
+                      <p>👤 Reclamante: <strong class="text-slate-800 dark:text-white">${comp.senderName || 'Convidado'} (Telefone: ${comp.senderPhone || 'Desconhecido'})</strong></p>
+                      <p>🎯 Assunto / Alvo: <span class="font-bold text-slate-700 dark:text-slate-300">${comp.targetName || 'Plataforma'}</span></p>
+                      <p class="p-3 bg-red-500/5 border border-red-500/10 rounded-xl text-slate-600 dark:text-red-200/95 whitespace-pre-line mt-2 italic">"${comp.text}"</p>
+                    </div>
+                    <div class="pt-2 flex justify-end gap-1.5">
+                      <button onclick="window.adminMarkComplaintResolve('${comp.id}')" class="px-3 py-1.5 bg-emerald-500 text-white font-bold rounded-lg uppercase text-[9px] hover:bg-emerald-600 transition flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Arquivar / Resolvida</button>
+                    </div>
+                  </div>
+                `).join('') : `
+                  <div class="p-12 text-center border-2 border-dashed border-slate-300 dark:border-brand-carddark rounded-2xl bg-slate-50 dark:bg-brand-carddark/20 text-slate-400">
+                    <p class="text-xs">Não existem reclamações pendentes na base de dados de momento. Clientes 100% satisfeitos!</p>
+                  </div>
+                `}
               </div>
             </div>
           ` : ''}
